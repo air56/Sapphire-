@@ -115,7 +115,7 @@ dotnet add src/NeteaseLyricsBridge.Tests/NeteaseLyricsBridge.Tests.csproj refere
 dotnet add src/NeteaseLyricsBridge.Tests/NeteaseLyricsBridge.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 8.0.30
 ```
 
-随后将两个项目的目标框架改为 `net8.0-windows10.0.19041.0`，并在 Bridge 项目添加 Windows SDK Contracts 引用，使 C# 可访问 `Windows.Media.Control` API。
+随后将两个项目的目标框架改为 `net8.0-windows10.0.19041.0`，并在 Bridge 项目添加 Windows SDK Contracts `10.0.19041.1` 引用，使 C# 可访问 `Windows.Media.Control` API 且保持 Windows 10 基线兼容。
 
 - [ ] **步骤 2：编写失败的歌曲身份归一化测试。**
 
