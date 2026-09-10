@@ -112,7 +112,7 @@ dotnet new web --name NeteaseLyricsBridge --output src/NeteaseLyricsBridge --fra
 dotnet new xunit --name NeteaseLyricsBridge.Tests --output src/NeteaseLyricsBridge.Tests --framework net8.0
 dotnet sln NeteaseLyrics.sln add src/NeteaseLyricsBridge/NeteaseLyricsBridge.csproj src/NeteaseLyricsBridge.Tests/NeteaseLyricsBridge.Tests.csproj
 dotnet add src/NeteaseLyricsBridge.Tests/NeteaseLyricsBridge.Tests.csproj reference src/NeteaseLyricsBridge/NeteaseLyricsBridge.csproj
-dotnet add src/NeteaseLyricsBridge.Tests/NeteaseLyricsBridge.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing
+dotnet add src/NeteaseLyricsBridge.Tests/NeteaseLyricsBridge.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 8.0.30
 ```
 
 随后将两个项目的目标框架改为 `net8.0-windows10.0.19041.0`，并在 Bridge 项目添加 Windows SDK Contracts 引用，使 C# 可访问 `Windows.Media.Control` API。
