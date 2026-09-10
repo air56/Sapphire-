@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0698E2EE-B529-4CF2-8A6C-D9A0B167484A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeteaseLyricsBridge", "src\NeteaseLyricsBridge\NeteaseLyricsBridge.csproj", "{DAECFB90-E219-4F48-8716-F53EFBE181C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeteaseLyricsBridge.Tests", "src\NeteaseLyricsBridge.Tests\NeteaseLyricsBridge.Tests.csproj", "{6E5428BE-2903-44B5-9E1F-BA10B9DF15B1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DAECFB90-E219-4F48-8716-F53EFBE181C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAECFB90-E219-4F48-8716-F53EFBE181C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAECFB90-E219-4F48-8716-F53EFBE181C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAECFB90-E219-4F48-8716-F53EFBE181C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E5428BE-2903-44B5-9E1F-BA10B9DF15B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E5428BE-2903-44B5-9E1F-BA10B9DF15B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E5428BE-2903-44B5-9E1F-BA10B9DF15B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E5428BE-2903-44B5-9E1F-BA10B9DF15B1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DAECFB90-E219-4F48-8716-F53EFBE181C9} = {0698E2EE-B529-4CF2-8A6C-D9A0B167484A}
+		{6E5428BE-2903-44B5-9E1F-BA10B9DF15B1} = {0698E2EE-B529-4CF2-8A6C-D9A0B167484A}
+	EndGlobalSection
+EndGlobal
