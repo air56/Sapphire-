@@ -11,6 +11,7 @@ const sources = [
   'lyric-view-model.js',
   'preview-mode.js',
   'responsive-layout.js',
+  'playback-state.js',
   'sapphire-smtc.js',
   'app.js'
 ];

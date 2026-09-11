@@ -9,6 +9,7 @@ public sealed class WindowsSmtcSessionFeed : ISmtcSessionFeed
     private GlobalSystemMediaTransportControlsSessionManager? _manager;
     private GlobalSystemMediaTransportControlsSession? _activeSession;
     private Func<MediaUpdate, Task>? _onUpdate;
+    private bool _publishedWaitingSnapshot;
     private bool _started;
 
     public async Task StartAsync(Func<MediaUpdate, Task> onUpdate, CancellationToken cancellationToken)
@@ -33,6 +34,7 @@ public sealed class WindowsSmtcSessionFeed : ISmtcSessionFeed
             _manager.CurrentSessionChanged += OnManagerSessionsChanged;
             _manager.SessionsChanged += OnManagerSessionsChanged;
             await RefreshActiveSessionAsync(cancellationToken);
+            _ = PollActiveSessionAsync(cancellationToken);
         }
         catch
         {
@@ -82,6 +84,12 @@ public sealed class WindowsSmtcSessionFeed : ISmtcSessionFeed
 
             if (_activeSession is null)
             {
+                if (_publishedWaitingSnapshot)
+                {
+                    return;
+                }
+
+                _publishedWaitingSnapshot = true;
                 await PublishAsync(new MediaUpdate(
                     null,
                     null,
@@ -91,15 +99,48 @@ public sealed class WindowsSmtcSessionFeed : ISmtcSessionFeed
                     0,
                     PlaybackState.Stopped,
                     0,
-                    DateTimeOffset.UtcNow));
+                    DateTimeOffset.UtcNow,
+                    MediaUpdateSource.WindowsSmtc));
                 return;
             }
 
+            _publishedWaitingSnapshot = false;
             await PublishSessionAsync(_activeSession);
         }
         finally
         {
             _gate.Release();
+        }
+    }
+
+    private async Task PollActiveSessionAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(250));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                try
+                {
+                    // SMTC does not guarantee TimelinePropertiesChanged for every
+                    // playback-position change. Polling keeps the public snapshot
+                    // current even when the player only emits play/pause events.
+                    await RefreshActiveSessionAsync(cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch
+                {
+                    // A session may disappear during a timer tick; the next tick
+                    // or manager event will recover it.
+                }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Normal shutdown.
         }
     }
 
@@ -144,7 +185,8 @@ public sealed class WindowsSmtcSessionFeed : ISmtcSessionFeed
             duration,
             ToPlaybackState(playbackInfo.PlaybackStatus),
             position,
-            DateTimeOffset.UtcNow));
+            DateTimeOffset.UtcNow,
+                    MediaUpdateSource.WindowsSmtc));
     }
 
     private async Task PublishAsync(MediaUpdate update)
@@ -216,3 +258,5 @@ public sealed class WindowsSmtcSessionFeed : ISmtcSessionFeed
         }
     }
 }
+
+

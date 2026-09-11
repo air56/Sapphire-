@@ -3,16 +3,17 @@ import { selectDisplayLines } from './lyric-view-model.js';
 import { createVisualPreviewSnapshot, getVisualPreviewMode } from './preview-mode.js';
 import { selectResponsiveLayout } from './responsive-layout.js';
 import { startSapphireSmtc } from './sapphire-smtc.js';
+import { createPlaybackClock } from './playback-state.js';
 
 const BRIDGE_ORIGIN = 'http://127.0.0.1:18763';
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
-const ids = ['widget-root', 'state-label', 'current-original', 'current-translation', 'next-original', 'settings-toggle', 'settings-panel', 'font-size-input', 'max-chars-input', 'color-input', 'font-size-output', 'max-chars-output'];
+const ids = ['widget-root', 'state-label', 'current-original', 'current-translation', 'next-original', 'settings-toggle', 'settings-panel', 'settings-close', 'font-size-input', 'max-chars-input', 'color-input', 'font-size-output', 'max-chars-output'];
 const els = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
 
 let settings = loadSettings();
 let editMode = false;
 let bridgeSnapshot = null;
-let lastPositionAnchor = null;
+const playbackClock = createPlaybackClock();
 let reconnectAttempt = 0;
 let reconnectTimer = null;
 let eventSource = null;
@@ -52,9 +53,7 @@ function clearLyrics(message = '') {
 
 function effectivePositionMs() {
   if (!bridgeSnapshot?.playback) return 0;
-  const positionMs = Math.max(0, Number(bridgeSnapshot.playback.positionMs) || 0);
-  if (String(bridgeSnapshot.playback.state).toLowerCase() !== 'playing' || !lastPositionAnchor) return positionMs;
-  return Math.max(0, positionMs + (performance.now() - lastPositionAnchor.monotonicMs));
+  return playbackClock.position(bridgeSnapshot.playback);
 }
 
 function renderLyrics() {
@@ -68,7 +67,7 @@ function renderLyrics() {
 function renderSnapshot(snapshot) {
   if (!snapshot) {
     bridgeSnapshot = null;
-    lastPositionAnchor = null;
+    playbackClock.reset();
     setState('尚未连接歌词服务', 'offline');
     clearLyrics('启动 Lyrics Bridge 后自动识别');
     return;
@@ -77,11 +76,7 @@ function renderSnapshot(snapshot) {
   const previousSessionId = bridgeSnapshot?.trackSessionId;
   const isNewSession = previousSessionId && previousSessionId !== snapshot.trackSessionId;
   bridgeSnapshot = snapshot;
-  const playbackState = String(snapshot.playback?.state ?? '').toLowerCase();
-  const now = performance.now();
-  lastPositionAnchor = playbackState === 'playing'
-    ? { positionMs: Math.max(0, Number(snapshot.playback?.positionMs) || 0), monotonicMs: now }
-    : null;
+  playbackClock.update(snapshot.trackSessionId, snapshot.playback);
 
   if (isNewSession) clearLyrics('正在获取歌词');
 
@@ -164,6 +159,11 @@ function bindSettings() {
     const open = els['settings-panel'].hidden;
     els['settings-panel'].hidden = !open;
     els['settings-toggle'].setAttribute('aria-expanded', String(open));
+  });
+  els['settings-close'].addEventListener('click', () => {
+    els['settings-panel'].hidden = true;
+    els['settings-toggle'].setAttribute('aria-expanded', 'false');
+    els['settings-toggle'].focus();
   });
 }
 

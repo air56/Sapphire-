@@ -36,7 +36,8 @@ public sealed record SapphireSmtcUpdate(
             Math.Max(0, DurationMs),
             ParsePlaybackState(State),
             Math.Max(0, PositionMs),
-            UpdatedAt ?? DateTimeOffset.UtcNow);
+            UpdatedAt ?? DateTimeOffset.UtcNow,
+            MediaUpdateSource.SapphireWebChannel);
 
         if (!candidate.IsNeteaseSession)
         {
@@ -55,3 +56,5 @@ public sealed record SapphireSmtcUpdate(
     private static string? NormalizeText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
+
+

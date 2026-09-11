@@ -26,6 +26,7 @@ $requiredFiles = @(
     'lyric-view-model.js',
     'preview-mode.js',
     'responsive-layout.js',
+    'playback-state.js',
     'preview.png',
     'assets/icon.svg'
 )

@@ -73,6 +73,83 @@ public sealed class TrackSessionCoordinatorTests
         Assert.Null(coordinator.Current.Track);
     }
 
+    [Fact]
+    public async Task WindowsSmtcPlaybackCannotBeOverwrittenByCachedSapphirePause()
+    {
+        var coordinator = new TrackSessionCoordinator(new ControllableLyricsProvider());
+        var now = DateTimeOffset.UtcNow;
+        var windows = MediaUpdate.Playing("song", ["artist"], 180_000, 30_000, now) with
+        {
+            Source = MediaUpdateSource.WindowsSmtc
+        };
+        var sapphire = windows with
+        {
+            Source = MediaUpdateSource.SapphireWebChannel,
+            State = PlaybackState.Paused,
+            PositionMs = 0,
+            UpdatedAt = now.AddMilliseconds(10)
+        };
+
+        await coordinator.ApplyMediaAsync(windows);
+        await coordinator.ApplyMediaAsync(sapphire);
+
+        Assert.Equal(PlaybackState.Playing, coordinator.Current.Playback.State);
+        Assert.Equal(30_000, coordinator.Current.Playback.PositionMs);
+    }
+
+    [Fact]
+    public async Task NewWindowsSnapshotCanAdvancePlaybackAfterSapphireInitializedTrack()
+    {
+        var coordinator = new TrackSessionCoordinator(new ControllableLyricsProvider());
+        var now = DateTimeOffset.UtcNow;
+        var sapphire = MediaUpdate.Playing("song", ["artist"], 180_000, 0, now) with
+        {
+            Source = MediaUpdateSource.SapphireWebChannel
+        };
+        var windows = sapphire with
+        {
+            Source = MediaUpdateSource.WindowsSmtc,
+            State = PlaybackState.Playing,
+            PositionMs = 8_000,
+            UpdatedAt = now.AddSeconds(1)
+        };
+
+        await coordinator.ApplyMediaAsync(sapphire);
+        await coordinator.ApplyMediaAsync(windows);
+
+        Assert.Equal(8_000, coordinator.Current.Playback.PositionMs);
+    }
+    [Fact]
+    public async Task SapphirePlaybackCanRecoverWhenWindowsStartsWithStalePausedSnapshot()
+    {
+        var coordinator = new TrackSessionCoordinator(new ControllableLyricsProvider());
+        var now = DateTimeOffset.UtcNow;
+        var windowsPaused = new MediaUpdate(
+            SourceAppUserModelId: "网易云音乐",
+            Title: "song",
+            Artists: ["artist"],
+            Album: null,
+            Artwork: null,
+            DurationMs: 180_000,
+            State: PlaybackState.Paused,
+            PositionMs: 0,
+            UpdatedAt: now,
+            Source: MediaUpdateSource.WindowsSmtc);
+        var sapphirePlaying = windowsPaused with
+        {
+            Source = MediaUpdateSource.SapphireWebChannel,
+            State = PlaybackState.Playing,
+            PositionMs = 1_500,
+            UpdatedAt = now.AddMilliseconds(500)
+        };
+
+        await coordinator.ApplyMediaAsync(windowsPaused);
+        await coordinator.ApplyMediaAsync(sapphirePlaying);
+
+        Assert.Equal(PlaybackState.Playing, coordinator.Current.Playback.State);
+        Assert.Equal(1_500, coordinator.Current.Playback.PositionMs);
+    }
+
     private static async Task WaitUntilAsync(Func<bool> condition)
     {
         var deadline = DateTime.UtcNow.AddSeconds(2);
@@ -107,3 +184,4 @@ public sealed class TrackSessionCoordinatorTests
                 null));
     }
 }
+

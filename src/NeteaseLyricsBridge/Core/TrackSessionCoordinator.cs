@@ -9,6 +9,9 @@ public sealed class TrackSessionCoordinator
     private readonly ILyricsProvider _lyricsProvider;
     private CancellationTokenSource? _lyricsCancellation;
     private string? _identityCacheKey;
+    private MediaUpdateSource _playbackAuthority = MediaUpdateSource.Unknown;
+    private string? _playbackAuthorityIdentity;
+    private DateTimeOffset? _lastWindowsUpdateAt;
     private BridgeSnapshot _current = CreateWaitingSnapshot();
 
     public event Action<BridgeSnapshot>? SnapshotChanged;
@@ -40,7 +43,6 @@ public sealed class TrackSessionCoordinator
         }
 
         var identity = TrackIdentity.Create(update.Title, update.Artists ?? [], update.DurationMs);
-        var playback = new PlaybackDto(update.State, Math.Max(0, update.PositionMs), update.UpdatedAt);
         var track = new TrackDto(
             update.Title.Trim(),
             update.Artists ?? [],
@@ -52,6 +54,7 @@ public sealed class TrackSessionCoordinator
         {
             if (string.Equals(_identityCacheKey, identity.CacheKey, StringComparison.Ordinal))
             {
+                var playback = SelectPlayback(update, identity.CacheKey);
                 _current = _current with
                 {
                     Track = track,
@@ -65,12 +68,13 @@ public sealed class TrackSessionCoordinator
             _lyricsCancellation?.Cancel();
             _lyricsCancellation = new CancellationTokenSource();
             _identityCacheKey = identity.CacheKey;
+            SetPlaybackAuthority(update, identity.CacheKey);
 
             var trackSessionId = Guid.NewGuid().ToString("N");
             _current = new BridgeSnapshot(
                 trackSessionId,
                 track,
-                playback,
+                CreatePlayback(update),
                 new LyricsDto("loading", []),
                 new BridgeDto("ready", null));
 
@@ -80,6 +84,64 @@ public sealed class TrackSessionCoordinator
 
         return Task.CompletedTask;
     }
+
+    private PlaybackDto SelectPlayback(MediaUpdate update, string identityCacheKey)
+    {
+        if (update.Source == MediaUpdateSource.WindowsSmtc)
+        {
+            if (_lastWindowsUpdateAt.HasValue && update.UpdatedAt < _lastWindowsUpdateAt.Value)
+            {
+                return _current.Playback;
+            }
+
+            SetPlaybackAuthority(update, identityCacheKey);
+            return CreatePlayback(update);
+        }
+
+        // Windows SMTC is preferred, but it can start with a stale paused/zero
+        // snapshot while Sapphire already knows that playback resumed. Allow a
+        // newer Sapphire Playing update to recover the clock. Once the current
+        // state is Playing, reject only the characteristic cached Sapphire pause
+        // that would move the timeline backwards; same-direction Playing updates
+        // remain useful as a fallback when Windows stops reporting positions.
+        if ((update.Source == MediaUpdateSource.SapphireWebChannel ||
+             update.Source == MediaUpdateSource.Unknown) &&
+            _playbackAuthority == MediaUpdateSource.WindowsSmtc &&
+            string.Equals(_playbackAuthorityIdentity, identityCacheKey, StringComparison.Ordinal))
+        {
+            if (update.UpdatedAt < _current.Playback.UpdatedAt)
+            {
+                return _current.Playback;
+            }
+
+            if (_current.Playback.State == PlaybackState.Playing)
+            {
+                if (update.State != PlaybackState.Playing ||
+                    update.PositionMs < _current.Playback.PositionMs)
+                {
+                    return _current.Playback;
+                }
+            }
+
+            return CreatePlayback(update);
+        }
+
+        SetPlaybackAuthority(update, identityCacheKey);
+        return CreatePlayback(update);
+    }
+
+    private void SetPlaybackAuthority(MediaUpdate update, string identityCacheKey)
+    {
+        _playbackAuthority = update.Source;
+        _playbackAuthorityIdentity = identityCacheKey;
+        if (update.Source == MediaUpdateSource.WindowsSmtc)
+        {
+            _lastWindowsUpdateAt = update.UpdatedAt;
+        }
+    }
+
+    private static PlaybackDto CreatePlayback(MediaUpdate update) =>
+        new(update.State, Math.Max(0, update.PositionMs), update.UpdatedAt);
 
     private async Task LoadLyricsAsync(string trackSessionId, TrackIdentity identity, CancellationToken cancellationToken)
     {
@@ -122,6 +184,9 @@ public sealed class TrackSessionCoordinator
             _lyricsCancellation?.Cancel();
             _lyricsCancellation = null;
             _identityCacheKey = null;
+            _playbackAuthority = MediaUpdateSource.Unknown;
+            _playbackAuthorityIdentity = null;
+            _lastWindowsUpdateAt = null;
             _current = new BridgeSnapshot(
                 Guid.NewGuid().ToString("N"),
                 null,

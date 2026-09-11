@@ -2,6 +2,13 @@ using NeteaseLyricsBridge.Contracts;
 
 namespace NeteaseLyricsBridge.Integrations;
 
+public enum MediaUpdateSource
+{
+    Unknown = 0,
+    SapphireWebChannel = 1,
+    WindowsSmtc = 2
+}
+
 public sealed record MediaUpdate(
     string? SourceAppUserModelId,
     string? Title,
@@ -11,7 +18,8 @@ public sealed record MediaUpdate(
     long DurationMs,
     PlaybackState State,
     long PositionMs,
-    DateTimeOffset UpdatedAt)
+    DateTimeOffset UpdatedAt,
+    MediaUpdateSource Source = MediaUpdateSource.Unknown)
 {
     public bool IsNeteaseSession =>
         !string.IsNullOrWhiteSpace(SourceAppUserModelId) &&

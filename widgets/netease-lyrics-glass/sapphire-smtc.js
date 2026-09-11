@@ -19,14 +19,23 @@ function nonNegativeMs(value) {
 }
 
 function toPlaybackState(value) {
-  switch (String(value ?? '').trim().toLowerCase()) {
-    case 'playing':
-      return 'Playing';
-    case 'paused':
-      return 'Paused';
-    default:
-      return 'Stopped';
+  // Sapphire's QML-facing SMTC status is localized (for example, "播放中")
+  // while some builds expose the English or numeric enum value. Normalize all
+  // known representations before sending the update to the bridge.
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    if (value === 0) return 'Playing';
+    if (value === 1) return 'Paused';
+    return 'Stopped';
   }
+
+  const normalized = String(value ?? '').trim().toLowerCase();
+  if (['playing', 'play', '播放中', '正在播放', '播放'].includes(normalized)) {
+    return 'Playing';
+  }
+  if (['paused', 'pause', '已暂停', '暂停播放', '暂停'].includes(normalized)) {
+    return 'Paused';
+  }
+  return 'Stopped';
 }
 
 function artistsFrom(value) {
@@ -44,12 +53,7 @@ export function isNeteaseApplicationName(value) {
   return applicationName !== null && /netease|cloudmusic|网易云/ui.test(applicationName);
 }
 
-export function createSapphireSmtcUpdate(mediaJson, playbackJson, now = new Date()) {
-  const media = parseJsonObject(mediaJson);
-  // Sapphire may publish the media property before the playback property finishes
-  // initializing. Media metadata is sufficient to start a lyrics lookup; a later
-  // playback signal will refine timeline and state.
-  const playback = parseJsonObject(playbackJson) ?? { enabled: true };
+function createUpdateFromValues(media, playback, now = new Date()) {
   if (!media || media.enabled === false || playback.enabled === false) return null;
 
   const sourceAppUserModelId = trimmedString(media.appName);
@@ -71,6 +75,40 @@ export function createSapphireSmtcUpdate(mediaJson, playbackJson, now = new Date
   };
 }
 
+export function createSapphireSmtcUpdate(mediaJson, playbackJson, now = new Date()) {
+  const media = parseJsonObject(mediaJson);
+  // Sapphire may publish the media property before the playback property finishes
+  // initializing. Media metadata is sufficient to start a lyrics lookup; a later
+  // playback signal will refine timeline and state.
+  const playback = parseJsonObject(playbackJson) ?? { enabled: true };
+  return createUpdateFromValues(media, playback, now);
+}
+
+export function createSapphireSmtcUpdateFromBridge(bridge, now = new Date()) {
+  if (!bridge || typeof bridge !== 'object') return null;
+
+  // Older Sapphire builds exposed two JSON strings. Current SWidget.qml exposes
+  // the same data as separate Q_PROPERTY values, so use the JSON values as a
+  // base and fill any missing fields from the direct properties.
+  const mediaJson = parseJsonObject(bridge.smtcMediaInfo) ?? {};
+  const playbackJson = parseJsonObject(bridge.smtcPlaybackStatus) ?? {};
+  const media = {
+    ...mediaJson,
+    appName: trimmedString(mediaJson.appName) ?? trimmedString(bridge.smtcAppName),
+    mediaTitle: trimmedString(mediaJson.mediaTitle) ?? trimmedString(bridge.smtcMediaTitle),
+    mediaArtist: trimmedString(mediaJson.mediaArtist) ?? trimmedString(bridge.smtcMediaArtist),
+    mediaAlbum: trimmedString(mediaJson.mediaAlbum) ?? trimmedString(bridge.smtcMediaAlbum)
+  };
+  const playback = {
+    ...playbackJson,
+    playbackStatus: playbackJson.playbackStatus ?? bridge.smtcPlaybackStatus,
+    playbackPosition: playbackJson.playbackPosition ?? bridge.smtcPlaybackPosition,
+    playbackDuration: playbackJson.playbackDuration ?? bridge.smtcPlaybackDuration
+  };
+
+  return createUpdateFromValues(media, playback, now);
+}
+
 function connectSignal(signal, handler) {
   if (signal && typeof signal.connect === 'function') {
     signal.connect(handler);
@@ -90,10 +128,11 @@ export function startSapphireSmtc(onUpdate, runtime = globalThis) {
   }
 
   let disposed = false;
+  let pollHandle = null;
   const emit = () => {
     if (disposed) return;
     const bridge = currentBridge;
-    const update = createSapphireSmtcUpdate(bridge?.smtcMediaInfo, bridge?.smtcPlaybackStatus);
+    const update = createSapphireSmtcUpdateFromBridge(bridge);
     if (update) void Promise.resolve(onUpdate(update)).catch(() => {});
   };
   let currentBridge = null;
@@ -103,8 +142,16 @@ export function startSapphireSmtc(onUpdate, runtime = globalThis) {
     currentBridge = channel?.objects?.bridge ?? null;
     if (!currentBridge) return;
 
-    connectSignal(currentBridge.smtcMediaInfoChanged, emit);
-    connectSignal(currentBridge.smtcPlaybackStatusChanged, emit);
+    [
+      'smtcMediaInfoChanged',
+      'smtcMediaTitleChanged',
+      'smtcMediaArtistChanged',
+      'smtcMediaAlbumChanged',
+      'smtcAppNameChanged',
+      'smtcPlaybackStatusChanged',
+      'smtcPlaybackPositionChanged',
+      'smtcPlaybackDurationChanged'
+    ].forEach((signalName) => connectSignal(currentBridge[signalName], emit));
 
     // Sapphire's official WebChannel sample defers its first reactive property
     // read, because the C++ side can finish filling these properties just after
@@ -113,12 +160,25 @@ export function startSapphireSmtc(onUpdate, runtime = globalThis) {
       ? runtime.setTimeout.bind(runtime)
       : setTimeout;
     schedule(emit, 200);
+
+    // Some Sapphire builds update the WebChannel properties without emitting
+    // a change signal for every timeline tick. Poll the cached reactive values
+    // so play/pause/position changes still reach the bridge.
+    const setIntervalFn = typeof runtime?.setInterval === 'function'
+      ? runtime.setInterval.bind(runtime)
+      : (typeof setInterval === 'function' ? setInterval : null);
+    if (setIntervalFn) pollHandle = setIntervalFn(emit, 250);
   });
 
   return {
     connected: true,
     dispose() {
       disposed = true;
+      const clearIntervalFn = typeof runtime?.clearInterval === 'function'
+        ? runtime.clearInterval.bind(runtime)
+        : (typeof clearInterval === 'function' ? clearInterval : null);
+      if (pollHandle !== null && clearIntervalFn) clearIntervalFn(pollHandle);
+      pollHandle = null;
       currentBridge = null;
     }
   };

@@ -32,6 +32,22 @@ test('creates a bridge media update from Sapphire SMTC JSON', () => {
   });
 });
 
+test('maps Sapphire Chinese playback statuses to bridge states', () => {
+  const playingUpdate = createSapphireSmtcUpdate(
+    media,
+    JSON.stringify({ enabled: true, playbackStatus: '播放中', playbackPosition: 42000, playbackDuration: 279000 }),
+    new Date('2026-09-11T03:00:00.000Z')
+  );
+  const pausedUpdate = createSapphireSmtcUpdate(
+    media,
+    JSON.stringify({ enabled: true, playbackStatus: '已暂停', playbackPosition: 42000, playbackDuration: 279000 }),
+    new Date('2026-09-11T03:00:01.000Z')
+  );
+
+  assert.equal(playingUpdate.state, 'Playing');
+  assert.equal(pausedUpdate.state, 'Paused');
+});
+
 test('only accepts known NetEase application names', () => {
   assert.equal(isNeteaseApplicationName('网易云音乐'), true);
   assert.equal(isNeteaseApplicationName('com.netease.cloudmusic'), true);
@@ -98,6 +114,7 @@ test('startSapphireSmtc waits for Sapphire reactive properties before its first 
   const mediaSignals = [];
   const playbackSignals = [];
   const timers = [];
+  const intervals = [];
   const bridge = {
     smtcMediaInfo: null,
     smtcPlaybackStatus: null,
@@ -119,7 +136,12 @@ test('startSapphireSmtc waits for Sapphire reactive properties before its first 
     setTimeout: (callback, delay) => {
       timers.push({ callback, delay });
       return timers.length;
-    }
+    },
+    setInterval: (callback, delay) => {
+      intervals.push({ callback, delay });
+      return intervals.length;
+    },
+    clearInterval: () => {}
   });
   channelCallback({ objects: { bridge } });
 
@@ -127,6 +149,8 @@ test('startSapphireSmtc waits for Sapphire reactive properties before its first 
   assert.equal(updates.length, 0);
   assert.equal(timers.length, 1);
   assert.equal(timers[0].delay, 200);
+  assert.equal(intervals.length, 1);
+  assert.equal(intervals[0].delay, 250);
 
   bridge.smtcMediaInfo = media;
   bridge.smtcPlaybackStatus = playing;
@@ -134,9 +158,39 @@ test('startSapphireSmtc waits for Sapphire reactive properties before its first 
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(updates.length, 1);
 
+  bridge.smtcPlaybackStatus = JSON.stringify({ ...JSON.parse(playing), playbackPosition: 43000 });
+  intervals[0].callback();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(updates.length, 2);
+  assert.equal(updates[1].positionMs, 43000);
+
   mediaSignals[0]();
   playbackSignals[0]();
   await new Promise((resolve) => setTimeout(resolve, 0));
-  assert.equal(updates.length, 3);
+  assert.equal(updates.length, 4);
   handle.dispose();
+});
+test('reads Sapphire real property bag with localized status and independent timeline fields', async () => {
+  const { createSapphireSmtcUpdateFromBridge } = await import('../sapphire-smtc.js');
+  const update = createSapphireSmtcUpdateFromBridge({
+    smtcMediaInfo: '',
+    smtcMediaTitle: '歌曲',
+    smtcMediaArtist: '歌手',
+    smtcMediaAlbum: '专辑',
+    smtcAppName: '网易云音乐',
+    smtcPlaybackStatus: '播放中',
+    smtcPlaybackPosition: 42000,
+    smtcPlaybackDuration: 279000
+  }, new Date('2026-09-11T06:00:00.000Z'));
+
+  assert.deepEqual(update, {
+    sourceAppUserModelId: '网易云音乐',
+    title: '歌曲',
+    artists: ['歌手'],
+    album: '专辑',
+    durationMs: 279000,
+    state: 'Playing',
+    positionMs: 42000,
+    updatedAt: '2026-09-11T06:00:00.000Z'
+  });
 });

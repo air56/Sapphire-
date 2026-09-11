@@ -4,9 +4,9 @@
 
 本项目已完成小组件外壳、Liquid Glass 响应式界面、设置持久化、歌词视图模型、SSE 重连逻辑，以及 .NET 8 本机 Bridge 的实现。当前版本新增 Sapphire WebChannel SMTC 主路径：组件会优先读取 Sapphire 提供的当前媒体信息，并在本机 Bridge 中完成网易云歌词匹配；Windows SMTC 仍作为兜底路径。实机播放验证需要在 Windows 10/11 上安装网易云音乐桌面客户端后进行。
 
-## 更新旧版本（0.1.5）
+## 更新旧版本（0.1.9）
 
-本次 `0.1.5` 为安装包和页面资源增加了版本标识，避免 Sapphire 继续复用旧组件包或 WebEngine 缓存；网易云歌词接口和歌曲匹配修复已包含在此前版本中。请删除旧组件后重新导入带版本号的新包。
+本次 `0.1.9` 修复了 Sapphire 返回数字播放状态导致歌词进度始终停在 0 毫秒的问题；现在播放中会在两次桥接更新之间本地推进时间轴，歌词可正常滚动。并增大了设置按钮、加入设置面板关闭按钮。请删除旧组件后重新导入带版本号的新包。
 
 如果你已经导入过早期的 `0.1.0` 安装包，请先在 Sapphire 的小组件管理器中删除旧的“网易云双语歌词玻璃条”，再导入本版本生成的安装包。早期版本把 QML 容器错误地作为 HTML 主文件，可能导致歌词区显示源代码、样式异常或组件无法运行。
 
@@ -45,7 +45,7 @@ Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动�
 .\scripts\package-widget.ps1
 ```
 
-生成的文件为 `dist/netease-lyrics-glass-v0.1.5.sawidget`。本次修复后的组件版本为 `0.1.5`。在 Sapphire 的小组件导入界面选择这个文件，然后将组件添加到桌面。
+生成的文件为 `dist/netease-lyrics-glass-v0.1.9.sawidget`。本次修复后的组件版本为 `0.1.9`。在 Sapphire 的小组件导入界面选择这个文件，然后将组件添加到桌面。
 
 ### 4. 播放歌曲
 
@@ -57,7 +57,7 @@ Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动�
 4. 在浏览器或 Sapphire 内打开 `http://127.0.0.1:18763/`，看到 `Netease Lyrics Bridge is running.` 才表示 Bridge 正在监听。
 5. 如果之前导入过旧包，请先删除旧的“网易云双语歌词玻璃条”，再导入新生成的 `.sawidget`；旧包可能把 `SWebWidget.qml` 当成 HTML 入口，从而在歌词栏显示源代码。
 
-组件不需要额外手动配置 WebChannel。新包的 `index.html` 会加载 Sapphire 提供的 `qrc:///qtwebchannel/qwebchannel.js`，然后订阅 `bridge.smtcMediaInfo`、`bridge.smtcPlaybackStatus` 及其变化信号。WebChannel 不可用时，组件仍会连接 `127.0.0.1:18763` 的 SSE 兜底链路。
+组件不需要额外手动配置 WebChannel。新包的 `index.html` 会加载 Sapphire 提供的 `qrc:///qtwebchannel/qwebchannel.js`，然后订阅 `bridge.smtcMediaInfo`、`bridge.smtcPlaybackStatus` 以及媒体标题、艺术家、专辑、应用名、播放位置和时长等独立属性及其变化信号。WebChannel 不可用时，组件仍会连接 `127.0.0.1:18763` 的 SSE 兜底链路。
 
 打开网易云音乐 Windows 桌面客户端并播放歌曲。组件会自动通过 Sapphire WebChannel 读取当前 SMTC 媒体信息；识别失败时会自动回退到本机 Windows SMTC Bridge。匹配歌曲后显示原文歌词；网易云提供翻译时，会在原文下显示中文翻译，并显示下一句预告。无需在网易云内开启额外开发者选项，也无需填写歌曲 ID。
 
@@ -98,5 +98,7 @@ Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动�
 
 | 日期 | Windows 版本 | 网易云客户端版本 | Bridge 版本 | 结果 |
 | --- | --- | --- | --- | --- |
-| 待补充 | Windows 10 | 待补充 | 0.1.5 | 待验证 |
-| 待补充 | Windows 11 | 待补充 | 0.1.5 | 待验证 |
+| 待补充 | Windows 10 | 待补充 | 0.1.9 | 待验证 |
+| 待补充 | Windows 11 | 待补充 | 0.1.9 | 待验证 |
+
+
