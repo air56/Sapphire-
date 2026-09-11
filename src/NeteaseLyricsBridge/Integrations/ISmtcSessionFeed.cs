@@ -1,0 +1,42 @@
+using NeteaseLyricsBridge.Contracts;
+
+namespace NeteaseLyricsBridge.Integrations;
+
+public sealed record MediaUpdate(
+    string? SourceAppUserModelId,
+    string? Title,
+    IReadOnlyList<string> Artists,
+    string? Album,
+    string? Artwork,
+    long DurationMs,
+    PlaybackState State,
+    long PositionMs,
+    DateTimeOffset UpdatedAt)
+{
+    public bool IsNeteaseSession =>
+        !string.IsNullOrWhiteSpace(SourceAppUserModelId) &&
+        (SourceAppUserModelId.Contains("netease", StringComparison.OrdinalIgnoreCase) ||
+         SourceAppUserModelId.Contains("cloudmusic", StringComparison.OrdinalIgnoreCase));
+
+    public static MediaUpdate Playing(
+        string title,
+        IReadOnlyList<string> artists,
+        long durationMs,
+        long positionMs,
+        DateTimeOffset updatedAt) =>
+        new(
+            "com.netease.cloudmusic",
+            title,
+            artists,
+            null,
+            null,
+            durationMs,
+            PlaybackState.Playing,
+            positionMs,
+            updatedAt);
+}
+
+public interface ISmtcSessionFeed
+{
+    Task StartAsync(Func<MediaUpdate, Task> onUpdate, CancellationToken cancellationToken);
+}
