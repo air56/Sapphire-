@@ -25,6 +25,13 @@ test('package requires and ships the configured preview image instead of a QML e
   assert.doesNotMatch(packageScript, /'SWebWidget\.qml'/);
 });
 
+test('HTML assets include the widget version to bust Sapphire WebEngine cache after upgrades', async () => {
+  const metadata = JSON.parse(await readFile(metadataUrl, 'utf8'));
+  const index = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+
+  assert.ok(index.includes(`./styles.css?v=${metadata.version}`));
+  assert.ok(index.includes(`./app.js?v=${metadata.version}`));
+});
 test('run-bridge.ps1 is UTF-8 BOM encoded for Windows PowerShell 5.1', async () => {
   const bytes = await readFile(bridgeScriptUrl);
 
