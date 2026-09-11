@@ -32,3 +32,36 @@ test('selectDisplayLines uses the first line as a preview before playback reache
     nextOriginal: 'one'
   });
 });
+
+test('selectDisplayLines returns fixed-height lyric slots for translated and untranslated lines', () => {
+  const result = selectDisplayLines([
+    { startMs: 0, original: 'もう一度だけ', translation: '再一次就好' },
+    { startMs: 5000, original: '下一句没有翻译', translation: null }
+  ], 0, 56);
+
+  assert.deepEqual(result.currentSlot, {
+    original: 'もう一度だけ',
+    translation: '再一次就好',
+    hasTranslation: true,
+    slotKey: 'current-0'
+  });
+  assert.deepEqual(result.nextSlot, {
+    original: '下一句没有翻译',
+    translation: null,
+    hasTranslation: false,
+    slotKey: 'next-1'
+  });
+});
+
+test('selectDisplayLines preserves next slot identity when translation is toggled', () => {
+  const withoutTranslation = selectDisplayLines([
+    { startMs: 0, original: 'line', translation: null },
+    { startMs: 5000, original: 'next', translation: null }
+  ], 0, 56);
+  const withTranslation = selectDisplayLines([
+    { startMs: 0, original: 'line', translation: '翻译' },
+    { startMs: 5000, original: 'next', translation: null }
+  ], 0, 56);
+
+  assert.equal(withoutTranslation.nextSlot.slotKey, withTranslation.nextSlot.slotKey);
+});

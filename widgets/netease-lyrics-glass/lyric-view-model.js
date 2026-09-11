@@ -25,9 +25,25 @@ export function selectDisplayLines(lines = [], positionMs = 0, maxChars = 56) {
   const current = currentIndex >= 0 ? usableLines[currentIndex] : null;
   const next = currentIndex < 0 ? (usableLines[0] ?? null) : (usableLines[currentIndex + 1] ?? null);
 
-  return {
+  const result = {
     currentOriginal: truncateText(current?.original, maxChars),
     currentTranslation: truncateText(current?.translation, maxChars),
     nextOriginal: truncateText(next?.original, maxChars)
   };
+  Object.defineProperties(result, {
+    currentSlot: { value: createSlot(current, 'current', currentIndex, maxChars), enumerable: false },
+    nextSlot: { value: createSlot(next, 'next', currentIndex + 1, maxChars), enumerable: false }
+  });
+  return result;
 }
+function createSlot(line, role, index, maxChars) {
+  if (!line) return null;
+  return {
+    original: truncateText(line.original, maxChars),
+    translation: truncateText(line.translation, maxChars),
+    hasTranslation: Boolean(String(line.translation ?? '').trim()),
+    slotKey: `${role}-${index}`
+  };
+}
+
+
