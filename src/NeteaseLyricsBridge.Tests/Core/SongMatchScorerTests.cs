@@ -41,4 +41,20 @@ public sealed class SongMatchScorerTests
         Assert.NotNull(match);
         Assert.Equal(1, match!.SongId);
     }
+
+    [Fact]
+    public void PickBest_AllowsExactMetadataTieWhenDurationIsUnavailable()
+    {
+        var query = TrackIdentity.Create("優しい彗星", ["YOASOBI"], 0);
+        var candidates = new[]
+        {
+            new SongCandidate(1809741562, "優しい彗星", ["YOASOBI"], 0),
+            new SongCandidate(1893592987, "優しい彗星", ["YOASOBI"], 0)
+        };
+
+        var match = new SongMatchScorer().PickBest(query, candidates);
+
+        Assert.NotNull(match);
+        Assert.Equal(1809741562, match!.SongId);
+    }
 }

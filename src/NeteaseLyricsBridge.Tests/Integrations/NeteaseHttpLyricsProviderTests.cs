@@ -46,12 +46,12 @@ public sealed class NeteaseHttpLyricsProviderTests
             lyric =>
             {
                 Assert.Equal(HttpMethod.Get, lyric.Method);
-                Assert.Equal("/api/song/lyric/v1", lyric.Uri.AbsolutePath);
+                Assert.Equal("/api/song/lyric", lyric.Uri.AbsolutePath);
                  Assert.Contains("id=7", lyric.Uri.Query, StringComparison.Ordinal);
-                 Assert.Contains("lv=0", lyric.Uri.Query, StringComparison.Ordinal);
-                 Assert.Contains("tv=0", lyric.Uri.Query, StringComparison.Ordinal);
-                 Assert.Contains("yv=0", lyric.Uri.Query, StringComparison.Ordinal);
-                 Assert.Contains("ytv=0", lyric.Uri.Query, StringComparison.Ordinal);
+                 Assert.Contains("lv=1", lyric.Uri.Query, StringComparison.Ordinal);
+                 Assert.Contains("tv=-1", lyric.Uri.Query, StringComparison.Ordinal);
+                 Assert.Contains("kv=1", lyric.Uri.Query, StringComparison.Ordinal);
+                 Assert.DoesNotContain("ytv=", lyric.Uri.Query, StringComparison.Ordinal);
             });
     }
 

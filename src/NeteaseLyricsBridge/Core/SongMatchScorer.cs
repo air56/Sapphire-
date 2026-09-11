@@ -31,11 +31,37 @@ public sealed partial class SongMatchScorer
 
         if (ranked.Length > 1 && ranked[0].Score - ranked[1].Score < SeparationThreshold)
         {
-            return null;
+            // Windows SMTC may not provide duration (0). In that case NetEase often
+            // returns multiple album entries with identical title and artist metadata.
+            // They are equivalent for lyric lookup, so keep the deterministic first hit.
+            if (query.DurationMs != 0 || !HasExactMetadata(query, ranked[0].Candidate, ranked[1].Candidate))
+            {
+                return null;
+            }
         }
 
         return ranked[0].Candidate;
     }
+
+    private static bool HasExactMetadata(
+        TrackIdentity query,
+        SongCandidate first,
+        SongCandidate second) =>
+        string.Equals(query.Title, Normalize(first.Title), StringComparison.Ordinal) &&
+        string.Equals(query.Title, Normalize(second.Title), StringComparison.Ordinal) &&
+        query.Artists.SequenceEqual(NormalizeArtists(first.Artists)) &&
+        query.Artists.SequenceEqual(NormalizeArtists(second.Artists));
+
+    private static string Normalize(string value) =>
+        Regex.Replace(value.Trim(), @"\s+", " ").ToLowerInvariant();
+
+    private static IReadOnlyList<string> NormalizeArtists(IEnumerable<string> artists) =>
+        artists
+            .Where(artist => !string.IsNullOrWhiteSpace(artist))
+            .Select(Normalize)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(artist => artist, StringComparer.Ordinal)
+            .ToArray();
 
     private static double Score(TrackIdentity query, SongCandidate candidate)
     {
