@@ -5,6 +5,7 @@ export const DEFAULT_VISUAL_PREVIEW = Object.freeze({
   translationSize: 17,
   opacity: 1,
   shadow: 0.45,
+  glow: 0.14,
   gap: 8,
   color: '#F7FBFF',
   translationColor: '#D9E5F7',
@@ -64,6 +65,7 @@ export function normalizeVisualPreview(input = {}) {
     translationSize: Math.round(clamp(input.translationSize, 10, 36, DEFAULT_VISUAL_PREVIEW.translationSize)),
     opacity: clamp(input.opacity, 0.35, 1, DEFAULT_VISUAL_PREVIEW.opacity),
     shadow: clamp(input.shadow, 0, 1, styleDefaults.shadow),
+    glow: clamp(input.glow, 0, 1, styleDefaults.glow),
     gap: Math.round(clamp(input.gap, 0, 24, DEFAULT_VISUAL_PREVIEW.gap)),
     background: 'transparent',
     style,
@@ -109,10 +111,37 @@ function setValue(id, value) {
   if (element) element.value = String(value);
 }
 
+function getOptionLabel(language, value) {
+  return listFontOptions(language).find((option) => option.value === value)?.label ?? value;
+}
+
+export function formatVisualPreviewSummary(input = {}) {
+  const selection = serializeSelection(input);
+  const styleName = VISUAL_STYLES.find((style) => style.id === selection.style)?.name ?? selection.style;
+  return `已选择：${styleName} · 中文 ${getOptionLabel('zh', selection.zhFont)} · 日文 ${getOptionLabel('ja', selection.jaFont)} · 英文 ${getOptionLabel('latin', selection.latinFont)}`;
+}
+
 function updateSelectionLabel(selection) {
   const target = document.getElementById('selection-summary');
   if (!target) return;
-  target.textContent = `已选择：${selection.style} · 中文 ${selection.zhFont} · 日文 ${selection.jaFont} · 英文 ${selection.latinFont}`;
+  target.textContent = formatVisualPreviewSummary(selection);
+}
+
+function updateOutput(id, value, suffix = '') {
+  const output = document.getElementById(id);
+  if (!output) return;
+  output.value = `${value}${suffix}`;
+  output.textContent = `${value}${suffix}`;
+}
+
+function updateStyleButtons(root, styleId) {
+  for (const style of VISUAL_STYLES) {
+    const button = root.getElementById(`style-${style.id}`);
+    if (!button) continue;
+    const selected = style.id === styleId;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  }
 }
 
 function renderFontOptions(id, language, selected) {
@@ -144,6 +173,14 @@ export function mountVisualPreviewPage(root = document) {
     setValue('opacity-input', state.opacity);
     setValue('shadow-input', state.shadow);
     setValue('gap-input', state.gap);
+    updateOutput('width-output', state.width, 'px');
+    updateOutput('height-output', state.height, 'px');
+    updateOutput('font-size-output', state.fontSize, 'px');
+    updateOutput('translation-size-output', state.translationSize, 'px');
+    updateOutput('gap-output', state.gap, 'px');
+    updateStyleButtons(root, state.style);
+    const translationToggle = root.getElementById('translation-toggle');
+    if (translationToggle) translationToggle.checked = state.translationVisible;
     frame.style.width = `${state.width}px`;
     frame.style.height = `${state.height}px`;
     frame.contentWindow?.postMessage(createPreviewMessage(state), '*');

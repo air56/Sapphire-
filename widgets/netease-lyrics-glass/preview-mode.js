@@ -6,10 +6,16 @@ export function getVisualPreviewMode(search, referrer, isEmbedded) {
   const mode = new URLSearchParams(search).get('__sapphireVisualPreview');
   if (!SUPPORTED_PREVIEW_MODES.has(mode)) return null;
 
+  // WebEngine and strict referrer policies may omit the referrer even for a
+  // real iframe. In that case the explicit preview query and embedded check
+  // still provide an opt-in signal. When a referrer is available, retain the
+  // dedicated preview-page guard so normal widget embeds cannot opt in by
+  // accident.
+  if (!referrer) return mode;
   try {
     return new URL(referrer).pathname.endsWith(VISUAL_PREVIEW_PARENT) ? mode : null;
   } catch {
-    return null;
+    return mode;
   }
 }
 

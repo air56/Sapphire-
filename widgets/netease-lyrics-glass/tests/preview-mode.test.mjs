@@ -20,12 +20,12 @@ test('visual preview ignores unknown frame modes', () => {
   assert.equal(createVisualPreviewSnapshot('full-screen'), null);
 });
 
-test('visual demo mode only activates from the dedicated visual-preview parent', () => {
+test('visual demo mode requires an embedded explicit preview signal', () => {
   const parent = 'http://127.0.0.1:61329/visual-style.html';
 
   assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=wide', parent, true), 'wide');
   assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=wide', parent, false), null);
-  assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=wide', ''), null);
+  assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=wide', '', true), 'wide');
   assert.equal(getVisualPreviewMode('?preview=wide', parent), null);
   assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=full-screen', parent), null);
 });
