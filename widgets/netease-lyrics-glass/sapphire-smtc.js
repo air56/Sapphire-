@@ -46,8 +46,11 @@ export function isNeteaseApplicationName(value) {
 
 export function createSapphireSmtcUpdate(mediaJson, playbackJson, now = new Date()) {
   const media = parseJsonObject(mediaJson);
-  const playback = parseJsonObject(playbackJson);
-  if (!media || !playback || media.enabled === false || playback.enabled === false) return null;
+  // Sapphire may publish the media property before the playback property finishes
+  // initializing. Media metadata is sufficient to start a lyrics lookup; a later
+  // playback signal will refine timeline and state.
+  const playback = parseJsonObject(playbackJson) ?? { enabled: true };
+  if (!media || media.enabled === false || playback.enabled === false) return null;
 
   const sourceAppUserModelId = trimmedString(media.appName);
   const title = trimmedString(media.mediaTitle);
@@ -102,7 +105,14 @@ export function startSapphireSmtc(onUpdate, runtime = globalThis) {
 
     connectSignal(currentBridge.smtcMediaInfoChanged, emit);
     connectSignal(currentBridge.smtcPlaybackStatusChanged, emit);
-    emit();
+
+    // Sapphire's official WebChannel sample defers its first reactive property
+    // read, because the C++ side can finish filling these properties just after
+    // the QWebChannel callback runs.
+    const schedule = typeof runtime?.setTimeout === 'function'
+      ? runtime.setTimeout.bind(runtime)
+      : setTimeout;
+    schedule(emit, 200);
   });
 
   return {

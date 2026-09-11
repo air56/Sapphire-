@@ -46,6 +46,31 @@ test('only accepts known NetEase application names', () => {
   assert.equal(createSapphireSmtcUpdate(foreignMedia, playing), null);
 });
 
+test('recognizes media as soon as Sapphire publishes it, even before playback status is ready', () => {
+  const update = createSapphireSmtcUpdate(
+    JSON.stringify({
+      enabled: true,
+      mediaTitle: '先行者',
+      mediaArtist: '歌手',
+      mediaAlbum: '专辑',
+      appName: 'CloudMusic.exe'
+    }),
+    null,
+    new Date('2026-09-11T05:00:00.000Z')
+  );
+
+  assert.deepEqual(update, {
+    sourceAppUserModelId: 'CloudMusic.exe',
+    title: '先行者',
+    artists: ['歌手'],
+    album: '专辑',
+    durationMs: 0,
+    state: 'Stopped',
+    positionMs: 0,
+    updatedAt: '2026-09-11T05:00:00.000Z'
+  });
+});
+
 test('rejects unusable Sapphire SMTC payloads and clamps negative timeline values', () => {
   assert.equal(createSapphireSmtcUpdate('{nope', playing), null);
   assert.equal(createSapphireSmtcUpdate(JSON.stringify({ enabled: false }), playing), null);
@@ -69,12 +94,13 @@ test('rejects unusable Sapphire SMTC payloads and clamps negative timeline value
   });
 });
 
-test('startSapphireSmtc reads initial properties and reacts to changed signals', async () => {
+test('startSapphireSmtc waits for Sapphire reactive properties before its first read and reacts to signals', async () => {
   const mediaSignals = [];
   const playbackSignals = [];
+  const timers = [];
   const bridge = {
-    smtcMediaInfo: media,
-    smtcPlaybackStatus: playing,
+    smtcMediaInfo: null,
+    smtcPlaybackStatus: null,
     smtcMediaInfoChanged: { connect: (handler) => mediaSignals.push(handler) },
     smtcPlaybackStatusChanged: { connect: (handler) => playbackSignals.push(handler) }
   };
@@ -89,12 +115,25 @@ test('startSapphireSmtc reads initial properties and reacts to changed signals',
   const { startSapphireSmtc } = await import('../sapphire-smtc.js');
   const handle = startSapphireSmtc((update) => updates.push(update), {
     qt: { webChannelTransport: {} },
-    QWebChannel: FakeQWebChannel
+    QWebChannel: FakeQWebChannel,
+    setTimeout: (callback, delay) => {
+      timers.push({ callback, delay });
+      return timers.length;
+    }
   });
   channelCallback({ objects: { bridge } });
-  await new Promise((resolve) => setTimeout(resolve, 0));
+
   assert.equal(handle.connected, true);
+  assert.equal(updates.length, 0);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].delay, 200);
+
+  bridge.smtcMediaInfo = media;
+  bridge.smtcPlaybackStatus = playing;
+  timers[0].callback();
+  await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(updates.length, 1);
+
   mediaSignals[0]();
   playbackSignals[0]();
   await new Promise((resolve) => setTimeout(resolve, 0));

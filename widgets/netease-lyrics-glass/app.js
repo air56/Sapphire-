@@ -215,7 +215,9 @@ async function forwardSapphireUpdate(update) {
 }
 
 function startSapphireMediaRecognition() {
-  startSapphireSmtc((update) => forwardSapphireUpdate(update));
+  // Let Sapphire inject qt.webChannelTransport before constructing QWebChannel.
+  // This matches the timing used by Sapphire's official WebChannel example.
+  window.setTimeout(() => startSapphireSmtc((update) => forwardSapphireUpdate(update)), 100);
 }
 
 function startPositionTicker() {
