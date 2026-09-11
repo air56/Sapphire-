@@ -68,8 +68,8 @@ function renderSnapshot(snapshot) {
   if (!snapshot) {
     bridgeSnapshot = null;
     lastPositionAnchor = null;
-    setState('等待歌词桥接服务', 'offline');
-    clearLyrics('等待歌词桥接服务');
+    setState('尚未连接歌词服务', 'offline');
+    clearLyrics('启动 Lyrics Bridge 后自动识别');
     return;
   }
 
@@ -142,13 +142,13 @@ async function connectBridge(generation = connectionGeneration) {
     source.onerror = () => {
       if (eventSource !== source) return;
       closeEventSource();
-      setState('等待歌词桥接服务', 'offline');
+      setState('尚未连接歌词服务', 'offline');
       scheduleReconnect(generation);
     };
     source.onopen = () => { reconnectAttempt = 0; };
   } catch {
-    setState('等待歌词桥接服务', 'offline');
-    clearLyrics('等待歌词桥接服务');
+    setState('尚未连接歌词服务', 'offline');
+    clearLyrics('启动 Lyrics Bridge 后自动识别');
     scheduleReconnect(generation);
   }
 }
@@ -212,7 +212,7 @@ readRuntimeContext();
 applySettings();
 bindSettings();
 bindRuntimeContext();
-setState('等待歌词桥接服务');
+setState('正在连接歌词服务');
 startPositionTicker();
 const visualPreviewSnapshot = createVisualPreviewSnapshot(visualPreviewMode);
 if (visualPreviewSnapshot) {

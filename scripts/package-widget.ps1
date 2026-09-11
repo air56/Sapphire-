@@ -8,7 +8,6 @@ $tempPath = Join-Path $distRoot 'netease-lyrics-glass.tmp.zip'
 
 $requiredFiles = @(
     'metadata.json',
-    'SWebWidget.qml',
     'index.html',
     'styles.css',
     'app.js',
@@ -16,6 +15,7 @@ $requiredFiles = @(
     'lyric-view-model.js',
     'preview-mode.js',
     'responsive-layout.js',
+    'preview.png',
     'assets/icon.svg'
 )
 

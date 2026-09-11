@@ -17,6 +17,7 @@ public sealed class BridgeBackgroundService(
         {
             await store.PublishAsync(coordinator.Current);
             await sessionFeed.StartAsync(update => coordinator.ApplyMediaAsync(update), stoppingToken);
+            await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {

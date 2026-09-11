@@ -1,12 +1,18 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
   --lyric-size: 26px;
-  --lyric-color: #f7fbff;
+  --lyric-color: #172033;
   --translation-size: 16px;
   --preview-size: 15px;
-  --muted-color: color-mix(in srgb, var(--lyric-color) 76%, transparent);
-  --faint-color: color-mix(in srgb, var(--lyric-color) 38%, transparent);
+  --muted-color: rgb(23 32 51 / .70);
+  --faint-color: rgb(23 32 51 / .46);
   font-family: "Aptos", "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+@supports (color: color-mix(in srgb, #000, transparent)) {
+  :root {
+    --muted-color: color-mix(in srgb, var(--lyric-color) 70%, transparent);
+    --faint-color: color-mix(in srgb, var(--lyric-color) 46%, transparent);
+  }
 }
 * { box-sizing: border-box; }
 html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: transparent; }
@@ -16,30 +22,33 @@ button { color: inherit; }
 
 #widget-root {
   position: relative; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; isolation: isolate;
-  padding: 14px 18px; border: 1px solid rgb(255 255 255 / .48); border-radius: 22px;
+  padding: 14px 18px; border: 1px solid rgb(255 255 255 / .74); border-radius: 22px;
   color: var(--lyric-color);
-  background: radial-gradient(circle at 10% 15%, rgb(122 205 255 / .42), transparent 35%), radial-gradient(circle at 85% 80%, rgb(209 125 255 / .34), transparent 38%), rgb(20 32 72 / .38);
-  box-shadow: inset 0 1px 1px rgb(255 255 255 / .72), inset 0 -1px 0 rgb(0 0 0 / .16), 0 16px 38px rgb(4 11 36 / .34);
-  backdrop-filter: blur(28px) saturate(145%); -webkit-backdrop-filter: blur(28px) saturate(145%);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgb(255 255 255 / .74), transparent 48%),
+    radial-gradient(ellipse at 100% 100%, rgb(191 220 255 / .24), transparent 52%),
+    rgb(244 249 255 / .40);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / .92), inset 0 -1px 0 rgb(130 160 198 / .16), 0 16px 38px rgb(45 78 119 / .20);
+  backdrop-filter: blur(30px) saturate(130%); -webkit-backdrop-filter: blur(30px) saturate(130%);
 }
-#widget-root::before { content: ""; position: absolute; z-index: -1; inset: 1px; border-radius: 21px; background: linear-gradient(132deg, rgb(255 255 255 / .18), transparent 38%); pointer-events: none; }
-#widget-root::after { content: ""; position: absolute; z-index: -1; inset: 2px; border: 1px solid rgb(255 255 255 / .08); border-radius: 20px; pointer-events: none; }
+#widget-root::before { content: ""; position: absolute; z-index: -1; inset: 1px; border-radius: 21px; background: linear-gradient(132deg, rgb(255 255 255 / .40), transparent 42%); pointer-events: none; }
+#widget-root::after { content: ""; position: absolute; z-index: -1; inset: 2px; border: 1px solid rgb(255 255 255 / .20); border-radius: 20px; pointer-events: none; }
 .lyrics-card { position: relative; width: 100%; height: 100%; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.ambient-glow { position: absolute; z-index: -2; border-radius: 999px; filter: blur(24px); opacity: .36; pointer-events: none; }
-.ambient-glow-a { width: 42%; height: 100%; left: -9%; top: -24%; background: #5d8cff; }
-.ambient-glow-b { width: 38%; height: 110%; right: -10%; bottom: -42%; background: #d56fff; }
+.ambient-glow { position: absolute; z-index: -2; border-radius: 999px; filter: blur(30px); opacity: .16; pointer-events: none; }
+.ambient-glow-a { width: 42%; height: 100%; left: -9%; top: -24%; background: #92bdff; }
+.ambient-glow-b { width: 38%; height: 110%; right: -10%; bottom: -42%; background: #d4b8ff; }
 .card-topline { display: flex; align-items: center; justify-content: space-between; min-height: 18px; }
-.eyebrow { display: flex; align-items: center; gap: 7px; min-width: 0; color: color-mix(in srgb, var(--lyric-color) 62%, transparent); font-size: 10px; letter-spacing: .08em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eyebrow { display: flex; align-items: center; gap: 7px; min-width: 0; color: var(--muted-color); font-size: 10px; letter-spacing: .08em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .status-dot { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: #8ba4c7; box-shadow: 0 0 12px currentColor; }
-[data-state='ready'] .status-dot { background: #7ee1b5; }
-[data-state='warning'] .status-dot, [data-state='error'] .status-dot { background: #ffb878; }
-.icon-button { width: 24px; height: 24px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 50%; color: color-mix(in srgb, var(--lyric-color) 62%, transparent); background: transparent; cursor: pointer; transition: color .2s, background .2s, transform .2s; }
-.icon-button:hover, .icon-button:focus-visible { color: var(--lyric-color); background: rgb(255 255 255 / .12); outline: none; }
+[data-state='ready'] .status-dot { background: #46b889; }
+[data-state='warning'] .status-dot, [data-state='error'] .status-dot { background: #e99554; }
+.icon-button { width: 24px; height: 24px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 50%; color: var(--muted-color); background: transparent; cursor: pointer; transition: color .2s, background .2s, transform .2s; }
+.icon-button:hover, .icon-button:focus-visible { color: var(--lyric-color); background: rgb(255 255 255 / .48); outline: none; }
 .icon-button:disabled { opacity: .32; cursor: default; }
 .icon-button:active:not(:disabled) { transform: scale(.92); }
 .lyrics { min-width: 0; display: grid; align-content: center; gap: 6px; white-space: normal; }
 .lyric-text { min-width: 0; margin: 0; overflow-wrap: anywhere; transition: opacity .22s ease, transform .22s ease; }
-#current-original { color: var(--lyric-color); font-size: var(--lyric-size); line-height: 1.12; font-weight: 700; letter-spacing: -.02em; text-shadow: 0 2px 18px rgb(0 0 0 / .22); }
+#current-original { color: var(--lyric-color); font-size: var(--lyric-size); line-height: 1.12; font-weight: 700; letter-spacing: -.02em; text-shadow: 0 1px 0 rgb(255 255 255 / .45); }
 #current-translation { color: var(--muted-color); font-size: var(--translation-size); line-height: 1.2; }
 #next-original { color: var(--faint-color); font-size: var(--preview-size); line-height: 1.16; margin-top: 1px; }
 [data-layout='wide'] .lyrics { display: flex; align-items: baseline; gap: 14px; white-space: nowrap; }
@@ -58,10 +67,10 @@ button { color: inherit; }
 [data-layout='compact'] #current-original { font-size: min(var(--lyric-size), 22px); line-height: 1.05; }
 [data-layout='compact'] #current-translation { font-size: min(var(--translation-size), 12px); line-height: 1.1; }
 [data-layout='compact'] #next-original { display: none; }
-.settings-panel { position: absolute; z-index: 5; right: 0; top: 30px; width: min(260px, calc(100% - 4px)); padding: 12px; border: 1px solid rgb(255 255 255 / .22); border-radius: 16px; background: rgb(21 28 44 / .86); box-shadow: 0 14px 32px rgb(0 0 0 / .3); backdrop-filter: blur(24px); }
+.settings-panel { position: absolute; z-index: 5; right: 0; top: 30px; width: min(260px, calc(100% - 4px)); padding: 12px; border: 1px solid rgb(255 255 255 / .68); border-radius: 16px; background: rgb(246 250 255 / .82); box-shadow: 0 14px 32px rgb(45 78 119 / .20); backdrop-filter: blur(24px); }
 .settings-heading { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: var(--lyric-color); }
-.settings-heading span { color: color-mix(in srgb, var(--lyric-color) 58%, transparent); font-size: 10px; }
-.setting-row { display: grid; grid-template-columns: 54px 1fr 40px; align-items: center; gap: 8px; min-height: 28px; color: color-mix(in srgb, var(--lyric-color) 62%, transparent); font-size: 11px; }
+.settings-heading span { color: var(--muted-color); font-size: 10px; }
+.setting-row { display: grid; grid-template-columns: 54px 1fr 40px; align-items: center; gap: 8px; min-height: 28px; color: var(--muted-color); font-size: 11px; }
 .setting-row input[type="range"] { width: 100%; accent-color: var(--lyric-color); }
 .setting-row input[type="color"] { grid-column: 2 / 4; width: 100%; height: 22px; padding: 0; border: 0; border-radius: 7px; background: transparent; }
 .setting-row output { text-align: right; color: var(--lyric-color); font-variant-numeric: tabular-nums; }
