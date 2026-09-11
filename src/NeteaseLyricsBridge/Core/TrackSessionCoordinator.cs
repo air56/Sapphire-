@@ -11,6 +11,8 @@ public sealed class TrackSessionCoordinator
     private string? _identityCacheKey;
     private BridgeSnapshot _current = CreateWaitingSnapshot();
 
+    public event Action<BridgeSnapshot>? SnapshotChanged;
+
     public TrackSessionCoordinator(ILyricsProvider lyricsProvider)
     {
         _lyricsProvider = lyricsProvider ?? throw new ArgumentNullException(nameof(lyricsProvider));
@@ -56,6 +58,7 @@ public sealed class TrackSessionCoordinator
                     Playback = playback,
                     Bridge = new BridgeDto("ready", null)
                 };
+                NotifyChanged(_current);
                 return Task.CompletedTask;
             }
 
@@ -71,6 +74,7 @@ public sealed class TrackSessionCoordinator
                 new LyricsDto("loading", []),
                 new BridgeDto("ready", null));
 
+            NotifyChanged(_current);
             _ = LoadLyricsAsync(trackSessionId, identity, _lyricsCancellation.Token);
         }
 
@@ -107,6 +111,7 @@ public sealed class TrackSessionCoordinator
                     ? new BridgeDto("error", result.ErrorCode)
                     : new BridgeDto("ready", null)
             };
+            NotifyChanged(_current);
         }
     }
 
@@ -123,8 +128,12 @@ public sealed class TrackSessionCoordinator
                 new PlaybackDto(PlaybackState.Stopped, 0, updatedAt),
                 new LyricsDto("unavailable", []),
                 new BridgeDto("waitingForPlayer", null));
+            NotifyChanged(_current);
         }
     }
+
+    private void NotifyChanged(BridgeSnapshot snapshot) =>
+        SnapshotChanged?.Invoke(snapshot);
 
     private static BridgeSnapshot CreateWaitingSnapshot() =>
         new(
