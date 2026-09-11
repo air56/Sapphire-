@@ -16,8 +16,11 @@ let eventSource = null;
 let connectionGeneration = 0;
 
 function applySettings() {
-  document.documentElement.style.setProperty('--font-size', `${settings.fontSize}px`);
-  document.documentElement.style.setProperty('--lyrics-color', settings.color);
+  const root = els['widget-root'];
+  root.style.setProperty('--lyric-size', `${settings.fontSize}px`);
+  root.style.setProperty('--lyric-color', settings.color);
+  root.style.setProperty('--translation-size', `${Math.round(settings.fontSize * 0.62)}px`);
+  root.style.setProperty('--preview-size', `${Math.round(settings.fontSize * 0.56)}px`);
   els['font-size-input'].value = settings.fontSize;
   els['max-chars-input'].value = settings.maxChars;
   els['color-input'].value = settings.color;
@@ -162,10 +165,37 @@ function bindSettings() {
 
 function readRuntimeContext() {
   const params = new URLSearchParams(location.search);
-  editMode = params.get('edit') === 'true';
-  if (editMode) els['settings-toggle'].disabled = true;
+  editMode = params.get('edit') === 'true' || params.get('editing') === 'true';
+  if (editMode) {
+    els['settings-panel'].hidden = true;
+    els['settings-toggle'].setAttribute('aria-expanded', 'false');
+    els['settings-toggle'].disabled = true;
+  }
 }
 
+function updateResponsiveLayout(width = els['widget-root'].clientWidth, height = els['widget-root'].clientHeight) {
+  const layout = height < 105 ? 'compact' : (width >= 560 ? 'wide' : 'stacked');
+  els['widget-root'].dataset.layout = layout;
+}
+
+function bindRuntimeContext() {
+  window.addEventListener('sapphire-context', (event) => {
+    const context = event.detail ?? {};
+    if (typeof context.theme === 'string') els['widget-root'].dataset.theme = context.theme;
+    if (context.editing === true || context.editMode === true) {
+      editMode = true;
+      els['settings-panel'].hidden = true;
+      els['settings-toggle'].setAttribute('aria-expanded', 'false');
+      els['settings-toggle'].disabled = true;
+    }
+  });
+  const observer = new ResizeObserver((entries) => {
+    const rect = entries[0]?.contentRect;
+    updateResponsiveLayout(rect?.width, rect?.height);
+  });
+  observer.observe(els['widget-root']);
+  updateResponsiveLayout();
+}
 function startPositionTicker() {
   const tick = () => {
     if (bridgeSnapshot?.lyrics?.status === 'ready') renderLyrics();
@@ -177,6 +207,7 @@ function startPositionTicker() {
 readRuntimeContext();
 applySettings();
 bindSettings();
+bindRuntimeContext();
 setState('等待歌词桥接服务');
 startPositionTicker();
 connectionGeneration += 1;
