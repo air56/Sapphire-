@@ -7,6 +7,11 @@ $metadataPath = Join-Path $widgetRoot 'metadata.json'
 $metadata = Get-Content -LiteralPath $metadataPath -Raw | ConvertFrom-Json
 $version = ([string]$metadata.version).Trim()
 if ([string]::IsNullOrWhiteSpace($version)) { throw 'metadata.json 缺少组件版本。' }
+
+$runtimeBuild = Join-Path $PSScriptRoot 'build-widget-runtime.mjs'
+node $runtimeBuild
+if ($LASTEXITCODE -ne 0) { throw '无法生成 Sapphire 兼容运行时。' }
+
 $outputPath = Join-Path $distRoot ('netease-lyrics-glass-v{0}.sawidget' -f $version)
 $tempPath = Join-Path $distRoot ('netease-lyrics-glass-v{0}.tmp.zip' -f $version)
 
@@ -15,6 +20,7 @@ $requiredFiles = @(
     'index.html',
     'styles.css',
     'app.js',
+    'app.runtime.js',
     'sapphire-smtc.js',
     'settings.js',
     'lyric-view-model.js',

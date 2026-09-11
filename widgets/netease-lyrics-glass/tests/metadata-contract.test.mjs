@@ -30,7 +30,7 @@ test('HTML assets include the widget version to bust Sapphire WebEngine cache af
   const index = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 
   assert.ok(index.includes(`./styles.css?v=${metadata.version}`));
-  assert.ok(index.includes(`./app.js?v=${metadata.version}`));
+  assert.ok(index.includes(`./app.runtime.js?v=${metadata.version}`));
 });
 test('package output embeds the metadata version to force Sapphire package refresh', async () => {
   const packageScript = await readFile(packageScriptUrl, 'utf8');

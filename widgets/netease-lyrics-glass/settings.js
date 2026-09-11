@@ -11,6 +11,14 @@ function clampInteger(value, min, max, fallback) {
   return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : fallback;
 }
 
+function getDefaultStorage() {
+  try {
+    return globalThis.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeColor(value) {
   return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)
     ? value.toUpperCase()
@@ -25,16 +33,23 @@ export function normalizeSettings(input = {}) {
   };
 }
 
-export function loadSettings(storage = globalThis.localStorage) {
+export function loadSettings(storage = getDefaultStorage()) {
   try {
+    if (!storage || typeof storage.getItem !== 'function') return { ...DEFAULT_SETTINGS };
     return normalizeSettings(JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}'));
   } catch {
     return { ...DEFAULT_SETTINGS };
   }
 }
 
-export function saveSettings(next, storage = globalThis.localStorage) {
+export function saveSettings(next, storage = getDefaultStorage()) {
   const normalized = normalizeSettings(next);
-  storage.setItem(SETTINGS_KEY, JSON.stringify(normalized));
+  try {
+    if (storage && typeof storage.setItem === 'function') {
+      storage.setItem(SETTINGS_KEY, JSON.stringify(normalized));
+    }
+  } catch {
+    // Sapphire may expose an opaque WebEngine origin without writable storage.
+  }
   return normalized;
 }
