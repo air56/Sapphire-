@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>网易云双语歌词玻璃条 · 视觉预览</title>
+    <style>
+      :root { color-scheme: dark; font-family: "Aptos", "Microsoft YaHei", "Segoe UI", sans-serif; }
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; margin: 0; }
+      body {
+        min-width: 0;
+        padding: clamp(22px, 5vw, 72px);
+        color: #f5f8ff;
+        background:
+          radial-gradient(circle at 18% 8%, rgb(89 153 255 / .34), transparent 29rem),
+          radial-gradient(circle at 84% 75%, rgb(205 107 255 / .28), transparent 33rem),
+          #080b18;
+      }
+      main { width: min(100%, 840px); margin: 0 auto; }
+      h1 { margin: 0; font-size: clamp(24px, 4vw, 34px); letter-spacing: -.03em; }
+      .intro { max-width: 62ch; margin: 10px 0 36px; color: rgb(226 234 255 / .7); line-height: 1.6; }
+      .preview-list { display: grid; gap: 28px; }
+      .preview-card { padding: 16px; overflow: auto; border: 1px solid rgb(255 255 255 / .12); border-radius: 22px; background: rgb(255 255 255 / .05); box-shadow: inset 0 1px rgb(255 255 255 / .08); }
+      .caption { display: flex; justify-content: space-between; gap: 18px; margin: 0 0 10px; color: rgb(236 241 255 / .72); font-size: 13px; }
+      .caption strong { color: #fff; font-size: 14px; }
+      .preview-frame { display: block; border: 0; border-radius: 22px; box-shadow: 0 18px 40px rgb(0 0 0 / .32); }
+      .preview-frame.wide { width: 640px; height: 128px; }
+      .preview-frame.stacked { width: 360px; height: 180px; }
+      .preview-frame.compact { width: 260px; height: 82px; border-radius: 15px; }
+      @media (max-width: 720px) { body { padding: 8px; } .preview-card { padding: 12px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Liquid Glass 响应式视觉预览</h1>
+      <p class="intro">用于在导入 Sapphire 前检查歌词组件的默认横向条、窄版双语布局和紧凑模式。每个画框均加载同一个组件页面，只是尺寸不同。</p>
+      <section class="preview-list" aria-label="歌词组件响应式尺寸预览">
+        <article class="preview-card">
+          <p class="caption"><strong>横向歌词条</strong><span>640 × 128</span></p>
+          <iframe class="preview-frame wide" title="横向歌词条预览" src="./index.html?preview=wide"></iframe>
+        </article>
+        <article class="preview-card">
+          <p class="caption"><strong>窄版双语布局</strong><span>360 × 180</span></p>
+          <iframe class="preview-frame stacked" title="窄版双语布局预览" src="./index.html?preview=stacked"></iframe>
+        </article>
+        <article class="preview-card">
+          <p class="caption"><strong>紧凑模式</strong><span>260 × 82</span></p>
+          <iframe class="preview-frame compact" title="紧凑模式预览" src="./index.html?preview=compact"></iframe>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

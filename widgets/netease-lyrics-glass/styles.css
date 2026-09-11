@@ -52,6 +52,10 @@ button { color: inherit; }
 [data-layout='compact']::after { border-radius: 13px; }
 [data-layout='compact'] .card-topline { min-height: 10px; }
 [data-layout='compact'] .eyebrow { font-size: 8px; }
+[data-layout='compact'] .lyrics { gap: 1px; }
+[data-layout='compact'] .lyric-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-layout='compact'] #current-original { font-size: min(var(--lyric-size), 22px); line-height: 1.05; }
+[data-layout='compact'] #current-translation { font-size: min(var(--translation-size), 12px); line-height: 1.1; }
 [data-layout='compact'] #next-original { display: none; }
 .settings-panel { position: absolute; z-index: 5; right: 0; top: 30px; width: min(260px, calc(100% - 4px)); padding: 12px; border: 1px solid rgb(255 255 255 / .22); border-radius: 16px; background: rgb(21 28 44 / .86); box-shadow: 0 14px 32px rgb(0 0 0 / .3); backdrop-filter: blur(24px); }
 .settings-heading { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: var(--lyric-color); }

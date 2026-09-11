@@ -1,5 +1,6 @@
 import { loadSettings, saveSettings } from './settings.js';
 import { selectDisplayLines } from './lyric-view-model.js';
+import { createVisualPreviewSnapshot } from './preview-mode.js';
 
 const BRIDGE_ORIGIN = 'http://127.0.0.1:18763';
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
@@ -14,6 +15,7 @@ let reconnectAttempt = 0;
 let reconnectTimer = null;
 let eventSource = null;
 let connectionGeneration = 0;
+let visualPreviewMode = null;
 
 function applySettings() {
   const root = els['widget-root'];
@@ -166,6 +168,7 @@ function bindSettings() {
 function readRuntimeContext() {
   const params = new URLSearchParams(location.search);
   editMode = params.get('edit') === 'true' || params.get('editing') === 'true';
+  visualPreviewMode = params.get('preview');
   if (editMode) {
     els['settings-panel'].hidden = true;
     els['settings-toggle'].setAttribute('aria-expanded', 'false');
@@ -210,5 +213,10 @@ bindSettings();
 bindRuntimeContext();
 setState('等待歌词桥接服务');
 startPositionTicker();
-connectionGeneration += 1;
-connectBridge(connectionGeneration);
+const visualPreviewSnapshot = createVisualPreviewSnapshot(visualPreviewMode);
+if (visualPreviewSnapshot) {
+  renderSnapshot(visualPreviewSnapshot);
+} else {
+  connectionGeneration += 1;
+  connectBridge(connectionGeneration);
+}
