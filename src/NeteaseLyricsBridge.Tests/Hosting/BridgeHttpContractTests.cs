@@ -26,6 +26,18 @@ public sealed class BridgeHttpContractTests
     }
 
     [Fact]
+    public async Task SnapshotEndpoint_AllowsLocalWidgetOrigins()
+    {
+        await using var factory = new BridgeWebApplicationFactory();
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/v1/snapshot");
+        request.Headers.Add("Origin", "null");
+
+        using var response = await factory.CreateClient().SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("*", response.Headers.GetValues("Access-Control-Allow-Origin").Single());
+    }
+    [Fact]
     public async Task EventsEndpoint_UsesEventStreamContentTypeAndSendsInitialSnapshot()
     {
         await using var factory = new BridgeWebApplicationFactory();

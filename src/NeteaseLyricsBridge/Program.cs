@@ -8,6 +8,11 @@ const string loopbackEndpoint = "http://127.0.0.1:18763";
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls(loopbackEndpoint);
 
+builder.Services.AddCors(options => options.AddPolicy("LocalWidget", policy =>
+{
+    // Bridge 只绑定回环地址；允许本地 WebEngine 的 file/qrc/null 来源读取只读快照和 SSE。
+    policy.AllowAnyOrigin().AllowAnyHeader();
+}));
 builder.Services.AddHttpClient<ILyricsProvider, NeteaseHttpLyricsProvider>(client =>
 {
     client.BaseAddress = new Uri("https://music.163.com/");
@@ -30,6 +35,7 @@ builder.Services.AddSingleton<BridgeStateStore>(services =>
 builder.Services.AddHostedService<BridgeBackgroundService>();
 
 var app = builder.Build();
+app.UseCors("LocalWidget");
 
 app.MapGet("/v1/snapshot", (BridgeStateStore store) =>
     Results.Json(store.Current));

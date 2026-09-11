@@ -2,3 +2,5 @@
 .worktrees/
 **/bin/
 **/obj/
+# Generated widget packages are intentionally not committed.
+*.sawidget
