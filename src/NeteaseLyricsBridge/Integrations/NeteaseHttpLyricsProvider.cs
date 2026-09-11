@@ -4,7 +4,7 @@ using NeteaseLyricsBridge.Core;
 
 namespace NeteaseLyricsBridge.Integrations;
 
-public sealed class NeteaseHttpLyricsProvider(HttpClient httpClient, SongMatchScorer scorer) : ILyricsProvider
+public sealed class NeteaseHttpLyricsProvider(HttpClient httpClient, SongMatchScorer scorer, IBridgeCache? cache = null) : ILyricsProvider
 {
     private static readonly Uri NeteaseHome = new("https://music.163.com/");
     private const string DesktopUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
@@ -18,6 +18,12 @@ public sealed class NeteaseHttpLyricsProvider(HttpClient httpClient, SongMatchSc
 
         try
         {
+            var cached = await GetCachedAsync(identity, timeout.Token);
+            if (cached is not null)
+            {
+                return cached;
+            }
+
             var candidates = await SearchAsync(identity, timeout.Token);
             var selected = scorer.PickBest(identity, candidates);
             if (selected is null)
@@ -32,9 +38,16 @@ public sealed class NeteaseHttpLyricsProvider(HttpClient httpClient, SongMatchSc
             }
 
             var lines = LrcParser.ParseAndMerge(original, translation);
-            return lines.Count == 0
+            var result = lines.Count == 0
                 ? Unavailable()
                 : new LyricsLookupResult("ready", lines, null);
+
+            if (result.Status == "ready")
+            {
+                await SetCachedAsync(identity, result, timeout.Token);
+            }
+
+            return result;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -50,6 +63,47 @@ public sealed class NeteaseHttpLyricsProvider(HttpClient httpClient, SongMatchSc
         }
     }
 
+    private async Task<LyricsLookupResult?> GetCachedAsync(TrackIdentity identity, CancellationToken cancellationToken)
+    {
+        if (cache is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await cache.GetAsync(identity, cancellationToken);
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    private async Task SetCachedAsync(TrackIdentity identity, LyricsLookupResult result, CancellationToken cancellationToken)
+    {
+        if (cache is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await cache.SetAsync(identity, result, cancellationToken);
+        }
+        catch (IOException)
+        {
+            // Disk cache failures must not hide successfully fetched lyrics.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Disk cache failures must not hide successfully fetched lyrics.
+        }
+    }
     private async Task<IReadOnlyList<SongCandidate>> SearchAsync(TrackIdentity identity, CancellationToken cancellationToken)
     {
         using var request = CreateRequest(

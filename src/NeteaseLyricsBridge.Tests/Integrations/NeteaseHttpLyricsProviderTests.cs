@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using NeteaseLyricsBridge.Contracts;
 using NeteaseLyricsBridge.Core;
 using NeteaseLyricsBridge.Integrations;
 
@@ -50,6 +51,58 @@ public sealed class NeteaseHttpLyricsProviderTests
     }
 
     [Fact]
+    public async Task GetLyricsAsync_ReturnsReadyCachedLyricsWithoutSendingHttpRequests()
+    {
+        var requestCount = 0;
+        var cached = new LyricsLookupResult("ready", [new LyricLine(1_500, "hello", "你好")], null);
+        var cache = new StubBridgeCache(cached);
+        using var client = new HttpClient(new StubHttpMessageHandler(_ =>
+        {
+            requestCount++;
+            return Task.FromException<HttpResponseMessage>(new InvalidOperationException("The cache hit must not use HTTP."));
+        }))
+        {
+            BaseAddress = new Uri("https://music.163.com/")
+        };
+        var provider = new NeteaseHttpLyricsProvider(client, new SongMatchScorer(), cache);
+
+        var result = await provider.GetLyricsAsync(
+            TrackIdentity.Create("The Bells", ["Alice"], 180_000),
+            CancellationToken.None);
+
+        Assert.Equal(cached, result);
+        Assert.Equal(1, cache.GetCount);
+        Assert.Equal(0, cache.SetCount);
+        Assert.Equal(0, requestCount);
+    }
+
+    [Fact]
+    public async Task GetLyricsAsync_CachesReadyLyricsAfterFetchingThem()
+    {
+        var cache = new StubBridgeCache(null);
+        using var client = new HttpClient(new StubHttpMessageHandler(request =>
+            Task.FromResult(request.RequestUri!.AbsolutePath.Contains("search", StringComparison.Ordinal)
+                ? Json("""
+                    {"result":{"songs":[{"id":7,"name":"The Bells","artists":[{"name":"Alice"}],"duration":180000}]}}
+                    """)
+                : Json("""
+                    {"lrc":{"lyric":"[00:01.50]hello"},"tlyric":{"lyric":"[00:01.50]你好"}}
+                    """))))
+        {
+            BaseAddress = new Uri("https://music.163.com/")
+        };
+        var provider = new NeteaseHttpLyricsProvider(client, new SongMatchScorer(), cache);
+        var identity = TrackIdentity.Create("The Bells", ["Alice"], 180_000);
+
+        var result = await provider.GetLyricsAsync(identity, CancellationToken.None);
+
+        Assert.Equal("ready", result.Status);
+        Assert.Equal(1, cache.GetCount);
+        Assert.Equal(1, cache.SetCount);
+        Assert.Equal(result, cache.StoredResult);
+    }
+
+    [Fact]
     public async Task GetLyricsAsync_ReturnsUnavailableWithoutAConfidentSearchMatch()
     {
         var requestCount = 0;
@@ -96,6 +149,28 @@ public sealed class NeteaseHttpLyricsProviderTests
     {
         Content = new StringContent(body, Encoding.UTF8, "application/json")
     };
+
+    private sealed class StubBridgeCache(LyricsLookupResult? cached) : IBridgeCache
+    {
+        public int GetCount { get; private set; }
+
+        public int SetCount { get; private set; }
+
+        public LyricsLookupResult? StoredResult { get; private set; }
+
+        public Task<LyricsLookupResult?> GetAsync(TrackIdentity identity, CancellationToken cancellationToken)
+        {
+            GetCount++;
+            return Task.FromResult(cached);
+        }
+
+        public Task SetAsync(TrackIdentity identity, LyricsLookupResult result, CancellationToken cancellationToken)
+        {
+            SetCount++;
+            StoredResult = result;
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
         : HttpMessageHandler
