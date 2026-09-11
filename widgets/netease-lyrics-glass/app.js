@@ -7,7 +7,7 @@ import { createPlaybackClock } from './playback-state.js';
 
 const BRIDGE_ORIGIN = 'http://127.0.0.1:18763';
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
-const ids = ['widget-root', 'state-label', 'current-original', 'current-translation', 'next-original', 'settings-toggle', 'settings-panel', 'settings-close', 'font-size-input', 'max-chars-input', 'color-input', 'font-size-output', 'max-chars-output'];
+const ids = ['widget-root', 'state-label', 'current-slot', 'current-original', 'current-translation', 'current-translation-text', 'next-slot', 'next-original', 'next-translation', 'next-translation-text', 'settings-toggle', 'settings-panel', 'settings-close', 'font-size-input', 'max-chars-input', 'color-input', 'font-size-output', 'max-chars-output'];
 const els = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
 
 let settings = loadSettings();
@@ -41,16 +41,83 @@ function setState(message, tone = 'idle') {
 }
 
 function setText(element, value, hidden = false) {
+  if (!element) return;
   element.textContent = value ?? '';
   element.hidden = hidden || !value;
 }
 
-function clearLyrics(message = '') {
-  setText(els['current-original'], message, !message);
-  setText(els['current-translation'], '', true);
-  setText(els['next-original'], '', true);
+function setSlotEmpty(slot, empty) {
+  if (!slot) return;
+  slot.dataset.empty = String(empty);
 }
 
+function renderScriptText(container, value) {
+  if (!container) return;
+  container.replaceChildren();
+  const text = String(value ?? '');
+  const fragment = document.createDocumentFragment();
+  let buffer = '';
+  let currentScript = null;
+  const flush = () => {
+    if (!buffer) return;
+    const span = document.createElement('span');
+    span.className = `script-${currentScript ?? 'zh'}`;
+    span.textContent = buffer;
+    fragment.appendChild(span);
+    buffer = '';
+  };
+  for (const character of text) {
+    const code = character.codePointAt(0);
+    const script = /[A-Za-z0-9]/.test(character)
+      ? 'latin'
+      : ((code >= 0x3040 && code <= 0x30ff) ? 'ja' : 'zh');
+    if (script !== currentScript) {
+      flush();
+      currentScript = script;
+    }
+    buffer += character;
+  }
+  flush();
+  container.appendChild(fragment);
+}
+
+function renderSlot(slot, originalElement, translationElement, original, translation) {
+  const hasOriginal = Boolean(String(original ?? '').trim());
+  const hasTranslation = Boolean(String(translation ?? '').trim());
+  if (originalElement?.id === 'current-original') renderScriptText(originalElement, original);
+  else setText(originalElement, original, !hasOriginal);
+  const translationText = translationElement?.querySelector('span') ?? translationElement;
+  setText(translationText, translation, false);
+  if (translationElement) {
+    translationElement.dataset.empty = String(!hasTranslation);
+    translationElement.setAttribute('aria-hidden', String(!hasTranslation));
+  }
+  setSlotEmpty(slot, !hasOriginal);
+}
+
+function clearLyrics(message = '') {
+  renderSlot(els['current-slot'], els['current-original'], els['current-translation'], message, '');
+  renderSlot(els['next-slot'], els['next-original'], els['next-translation'], '', '');
+}
+
+function applyVisualPreviewMessage(message) {
+  if (!message || message.type !== 'netease-lyrics-visual-preview' || window.parent === window) return;
+  const next = message.settings ?? {};
+  const root = els['widget-root'];
+  root.style.setProperty('--font-zh', next.zhFont || 'system-ui');
+  root.style.setProperty('--font-ja', next.jaFont || 'system-ui');
+  root.style.setProperty('--font-latin', next.latinFont || 'system-ui');
+  root.style.setProperty('--lyric-size', `${Number(next.fontSize) || 34}px`);
+  root.style.setProperty('--translation-size', `${Number(next.translationSize) || 17}px`);
+  root.style.setProperty('--text-shadow-strength', String(Number(next.shadow) || 0));
+  root.style.setProperty('--text-glow-strength', String(Number(next.glow) || 0));
+  root.style.setProperty('--translation-gap', `${Number(next.gap) || 0}px`);
+  root.style.setProperty('--lyric-color', next.color || '#F7FBFF');
+  root.dataset.translationVisible = String(next.translationVisible !== false);
+  document.querySelectorAll('.current-translation, .next-translation').forEach((element) => {
+    element.style.visibility = next.translationVisible === false ? 'hidden' : '';
+  });
+}
 function effectivePositionMs() {
   if (!bridgeSnapshot?.playback) return 0;
   return playbackClock.position(bridgeSnapshot.playback);
@@ -59,9 +126,8 @@ function effectivePositionMs() {
 function renderLyrics() {
   if (!bridgeSnapshot?.lyrics?.lines?.length) return;
   const selected = selectDisplayLines(bridgeSnapshot.lyrics.lines, effectivePositionMs(), settings.maxChars);
-  setText(els['current-original'], selected.currentOriginal);
-  setText(els['current-translation'], selected.currentTranslation);
-  setText(els['next-original'], selected.nextOriginal);
+  renderSlot(els['current-slot'], els['current-original'], els['current-translation'], selected.currentSlot?.original ?? selected.currentOriginal, selected.currentSlot?.translation ?? selected.currentTranslation);
+  renderSlot(els['next-slot'], els['next-original'], els['next-translation'], selected.nextSlot?.original ?? selected.nextOriginal, selected.nextSlot?.translation ?? '');
 }
 
 function renderSnapshot(snapshot) {
@@ -184,6 +250,7 @@ function updateResponsiveLayout(width, height) {
 }
 
 function bindRuntimeContext() {
+  window.addEventListener('message', (event) => applyVisualPreviewMessage(event.data));
   window.addEventListener('sapphire-context', (event) => {
     const context = event.detail ?? {};
     if (typeof context.theme === 'string') els['widget-root'].dataset.theme = context.theme;
@@ -242,3 +309,4 @@ if (visualPreviewSnapshot) {
   connectionGeneration += 1;
   connectBridge(connectionGeneration);
 }
+

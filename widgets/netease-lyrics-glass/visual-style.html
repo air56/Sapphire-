@@ -3,52 +3,58 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>网易云双语歌词玻璃条 · 视觉预览</title>
-    <style>
-      :root { color-scheme: dark; font-family: "Aptos", "Microsoft YaHei", "Segoe UI", sans-serif; }
-      * { box-sizing: border-box; }
-      html, body { min-height: 100%; margin: 0; }
-      body {
-        min-width: 0;
-        padding: clamp(22px, 5vw, 72px);
-        color: #f5f8ff;
-        background:
-          radial-gradient(circle at 18% 8%, rgb(89 153 255 / .34), transparent 29rem),
-          radial-gradient(circle at 84% 75%, rgb(205 107 255 / .28), transparent 33rem),
-          #080b18;
-      }
-      main { width: min(100%, 840px); margin: 0 auto; }
-      h1 { margin: 0; font-size: clamp(24px, 4vw, 34px); letter-spacing: -.03em; }
-      .intro { max-width: 62ch; margin: 10px 0 36px; color: rgb(226 234 255 / .7); line-height: 1.6; }
-      .preview-list { display: grid; gap: 28px; }
-      .preview-card { padding: 16px; overflow: auto; border: 1px solid rgb(255 255 255 / .12); border-radius: 22px; background: rgb(255 255 255 / .05); box-shadow: inset 0 1px rgb(255 255 255 / .08); }
-      .caption { display: flex; justify-content: space-between; gap: 18px; margin: 0 0 10px; color: rgb(236 241 255 / .72); font-size: 13px; }
-      .caption strong { color: #fff; font-size: 14px; }
-      .preview-frame { display: block; border: 0; border-radius: 22px; box-shadow: 0 18px 40px rgb(0 0 0 / .32); }
-      .preview-frame.wide { width: 640px; height: 128px; }
-      .preview-frame.stacked { width: 360px; height: 180px; }
-      .preview-frame.compact { width: 260px; height: 82px; border-radius: 15px; }
-      @media (max-width: 720px) { body { padding: 8px; } .preview-card { padding: 12px; } }
-    </style>
+    <meta name="color-scheme" content="dark" />
+    <title>歌词透明视觉预览</title>
+    <link rel="stylesheet" href="./visual-preview.css" />
   </head>
   <body>
-    <main>
-      <h1>Liquid Glass 响应式视觉预览</h1>
-      <p class="intro">用于在导入 Sapphire 前检查歌词组件的默认横向条、窄版双语布局和紧凑模式。每个画框均加载同一个组件页面，只是尺寸不同。</p>
-      <section class="preview-list" aria-label="歌词组件响应式尺寸预览">
-        <article class="preview-card">
-          <p class="caption"><strong>横向歌词条</strong><span>640 × 128</span></p>
-          <iframe class="preview-frame wide" title="横向歌词条预览" src="./index.html?__sapphireVisualPreview=wide"></iframe>
-        </article>
-        <article class="preview-card">
-          <p class="caption"><strong>窄版双语布局</strong><span>360 × 180</span></p>
-          <iframe class="preview-frame stacked" title="窄版双语布局预览" src="./index.html?__sapphireVisualPreview=stacked"></iframe>
-        </article>
-        <article class="preview-card">
-          <p class="caption"><strong>紧凑模式</strong><span>260 × 82</span></p>
-          <iframe class="preview-frame compact" title="紧凑模式预览" src="./index.html?__sapphireVisualPreview=compact"></iframe>
-        </article>
+    <main class="preview-app">
+      <header class="page-header">
+        <div>
+          <p class="kicker">NETEASE LYRICS · VISUAL LAB</p>
+          <h1>透明歌词层预览</h1>
+          <p class="intro">选择适合桌面壁纸的艺术字体与文字效果。歌词区域本身完全透明，原文和翻译固定在同一句 slot 内。</p>
+        </div>
+        <div class="header-badge"><span class="badge-dot"></span>A · 极简透明文字层</div>
+      </header>
+
+      <section class="workspace">
+        <aside class="control-panel" aria-label="预览设置">
+          <div class="panel-heading"><div><span class="section-label">01</span><h2>字体组合</h2></div><span class="live-pill">实时预览</span></div>
+          <label class="field"><span>中文字体</span><select id="font-zh"></select></label>
+          <label class="field"><span>日文 / 假名</span><select id="font-ja"></select></label>
+          <label class="field"><span>英文 / 拉丁</span><select id="font-latin"></select></label>
+
+          <div class="panel-heading compact-heading"><div><span class="section-label">02</span><h2>尺寸与排版</h2></div></div>
+          <label class="range-field"><span>宽度 <output id="width-output">640px</output></span><input id="width-input" type="range" min="160" max="960" step="10" value="640" /></label>
+          <label class="range-field"><span>高度 <output id="height-output">180px</output></span><input id="height-input" type="range" min="96" max="420" step="4" value="180" /></label>
+          <label class="range-field"><span>主歌词字号 <output id="font-size-output">34px</output></span><input id="font-size-input" type="range" min="16" max="64" value="34" /></label>
+          <label class="range-field"><span>翻译字号 <output id="translation-size-output">17px</output></span><input id="translation-size-input" type="range" min="10" max="36" value="17" /></label>
+          <label class="range-field"><span>原文与翻译间距 <output id="gap-output">8px</output></span><input id="gap-input" type="range" min="0" max="24" value="8" /></label>
+          <label class="switch-field"><span>显示中文翻译</span><input id="translation-toggle" type="checkbox" checked /><span class="switch-ui"></span></label>
+
+          <div class="panel-heading compact-heading"><div><span class="section-label">03</span><h2>透明文字效果</h2></div></div>
+          <div id="style-choice" class="style-grid" role="radiogroup" aria-label="透明文字效果">
+            <button id="style-transparent-shadow" class="style-choice active" type="button"><span class="style-swatch shadow-swatch">Aa</span><span><strong>清晰阴影</strong><small>适合复杂壁纸</small></span></button>
+            <button id="style-transparent-glow" class="style-choice" type="button"><span class="style-swatch glow-swatch">Aa</span><span><strong>柔和光晕</strong><small>轻盈有氛围</small></span></button>
+            <button id="style-transparent-soft" class="style-choice" type="button"><span class="style-swatch soft-swatch">Aa</span><span><strong>低干扰</strong><small>最接近时钟</small></span></button>
+          </div>
+          <button id="select-style-button" class="primary-button" type="button">选择此样式</button>
+          <p id="selection-summary" class="selection-summary" aria-live="polite"></p>
+        </aside>
+
+        <section class="stage" aria-label="歌词预览画布">
+          <div class="stage-toolbar"><span><i class="toolbar-dot blue"></i>桌面壁纸模拟</span><span>原文 / 中文翻译固定 slot</span></div>
+          <div class="wallpaper wallpaper-a">
+            <div class="orb orb-one"></div><div class="orb orb-two"></div><div class="orb orb-three"></div>
+            <div class="wallpaper-label">MIDNIGHT<br /><strong>04:26</strong></div>
+            <iframe id="lyrics-preview-frame" title="透明歌词组件预览" src="./index.html?__sapphireVisualPreview=interactive"></iframe>
+          </div>
+          <div class="stage-hints"><span>当前示例：日文 · 英文 · 中文</span><span>双语歌词不会推动下一句位置</span></div>
+        </section>
       </section>
     </main>
+    <script type="module" src="./visual-preview.js"></script>
   </body>
 </html>
+

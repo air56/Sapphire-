@@ -17,9 +17,20 @@
           <button id="settings-toggle" class="icon-button" type="button" aria-label="打开歌词设置" aria-controls="settings-panel" aria-expanded="false" title="歌词设置">⚙</button>
         </div>
         <div class="lyrics" role="status">
-          <p id="current-original" class="lyric-text current-original">正在启动歌词组件…</p>
-          <p id="current-translation" class="lyric-text current-translation" hidden></p>
-          <p id="next-original" class="lyric-text next-original" hidden></p>
+          <div id="current-slot" class="lyric-slot current-slot">
+            <p id="current-original" class="lyric-text current-original">
+              <span id="current-original-zh" class="font-anchor" aria-hidden="true"></span>
+              <span id="current-original-ja" class="font-anchor" aria-hidden="true"></span>
+              <span id="current-original-latin" class="font-anchor" aria-hidden="true"></span>
+            </p>
+            <p id="current-translation" class="lyric-text current-translation" data-empty="true">
+              <span id="current-translation-text"></span>
+            </p>
+          </div>
+          <div id="next-slot" class="lyric-slot next-slot" data-empty="true">
+            <p id="next-original" class="lyric-text next-original"><span id="next-original-text"></span></p>
+            <p id="next-translation" class="lyric-text next-translation" data-empty="true"><span id="next-translation-text"></span></p>
+          </div>
         </div>
         <aside id="settings-panel" class="settings-panel" hidden aria-label="歌词设置">
           <div class="settings-heading">
@@ -39,5 +50,3 @@
     <script src="./app.runtime.js?v=0.1.9"></script>
   </body>
 </html>
-
-
