@@ -11,6 +11,7 @@ $requiredFiles = @(
     'index.html',
     'styles.css',
     'app.js',
+    'sapphire-smtc.js',
     'settings.js',
     'lyric-view-model.js',
     'preview-mode.js',

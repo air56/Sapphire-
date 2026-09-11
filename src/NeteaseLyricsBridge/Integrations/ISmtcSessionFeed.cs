@@ -16,7 +16,8 @@ public sealed record MediaUpdate(
     public bool IsNeteaseSession =>
         !string.IsNullOrWhiteSpace(SourceAppUserModelId) &&
         (SourceAppUserModelId.Contains("netease", StringComparison.OrdinalIgnoreCase) ||
-         SourceAppUserModelId.Contains("cloudmusic", StringComparison.OrdinalIgnoreCase));
+         SourceAppUserModelId.Contains("cloudmusic", StringComparison.OrdinalIgnoreCase) ||
+         SourceAppUserModelId.Contains("网易云", StringComparison.OrdinalIgnoreCase));
 
     public static MediaUpdate Playing(
         string title,

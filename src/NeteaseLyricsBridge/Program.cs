@@ -11,7 +11,7 @@ builder.WebHost.UseUrls(loopbackEndpoint);
 builder.Services.AddCors(options => options.AddPolicy("LocalWidget", policy =>
 {
     // Bridge 只绑定回环地址；允许本地 WebEngine 的 file/qrc/null 来源读取只读快照和 SSE。
-    policy.AllowAnyOrigin().AllowAnyHeader();
+    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
 }));
 builder.Services.AddSingleton<SongMatchScorer>();
 builder.Services.AddHttpClient<ILyricsProvider, NeteaseHttpLyricsProvider>(client =>
@@ -40,6 +40,17 @@ app.UseCors("LocalWidget");
 
 app.MapGet("/v1/snapshot", (BridgeStateStore store) =>
     Results.Json(store.Current));
+
+app.MapPost("/v1/smtc", async (SapphireSmtcUpdate? input, TrackSessionCoordinator coordinator) =>
+{
+    if (input is null || !input.TryToMediaUpdate(out var update) || update is null)
+    {
+        return Results.BadRequest(new { error = "invalidNeteaseMediaUpdate" });
+    }
+
+    await coordinator.ApplyMediaAsync(update);
+    return Results.Accepted("/v1/snapshot");
+});
 
 app.MapGet("/v1/events", async (
     HttpContext context,

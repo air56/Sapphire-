@@ -21,7 +21,7 @@ public sealed class NeteaseHttpLyricsProviderTests
                     {"result":{"songs":[{"id":7,"name":"The Bells","artists":[{"name":"Alice"},{"name":"Zed"}],"duration":180000}]}}
                     """)
                 : Json("""
-                    {"lrc":{"lyric":"[00:01.50]hello"},"tlyric":{"lyric":"[00:01.50]你好"}}
+                    {"lrc":{"lyric":"[00:01.50]hello"},"tlyric":{"lyric":"[00:01.50]旧翻译"},"ytlrc":{"lyric":"[00:01.50]新翻译"}}
                     """);
         }))
         {
@@ -34,7 +34,7 @@ public sealed class NeteaseHttpLyricsProviderTests
 
         Assert.Equal("ready", result.Status);
         Assert.Null(result.ErrorCode);
-        Assert.Equal("你好", result.Lines.Single(line => line.StartMs == 1500).Translation);
+        Assert.Equal("新翻译", result.Lines.Single(line => line.StartMs == 1500).Translation);
         Assert.Collection(requests,
             search =>
             {
@@ -46,7 +46,12 @@ public sealed class NeteaseHttpLyricsProviderTests
             lyric =>
             {
                 Assert.Equal(HttpMethod.Get, lyric.Method);
-                Assert.Contains("id=7", lyric.Uri.Query, StringComparison.Ordinal);
+                Assert.Equal("/api/song/lyric/v1", lyric.Uri.AbsolutePath);
+                 Assert.Contains("id=7", lyric.Uri.Query, StringComparison.Ordinal);
+                 Assert.Contains("lv=0", lyric.Uri.Query, StringComparison.Ordinal);
+                 Assert.Contains("tv=0", lyric.Uri.Query, StringComparison.Ordinal);
+                 Assert.Contains("yv=0", lyric.Uri.Query, StringComparison.Ordinal);
+                 Assert.Contains("ytv=0", lyric.Uri.Query, StringComparison.Ordinal);
             });
     }
 
@@ -86,7 +91,7 @@ public sealed class NeteaseHttpLyricsProviderTests
                     {"result":{"songs":[{"id":7,"name":"The Bells","artists":[{"name":"Alice"}],"duration":180000}]}}
                     """)
                 : Json("""
-                    {"lrc":{"lyric":"[00:01.50]hello"},"tlyric":{"lyric":"[00:01.50]你好"}}
+                    {"lrc":{"lyric":"[00:01.50]hello"},"tlyric":{"lyric":"[00:01.50]旧翻译"},"ytlrc":{"lyric":"[00:01.50]新翻译"}}
                     """))))
         {
             BaseAddress = new Uri("https://music.163.com/")

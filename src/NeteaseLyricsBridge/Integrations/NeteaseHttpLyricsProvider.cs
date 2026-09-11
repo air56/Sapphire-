@@ -149,7 +149,7 @@ public sealed class NeteaseHttpLyricsProvider(HttpClient httpClient, SongMatchSc
     {
         using var request = CreateRequest(
             HttpMethod.Get,
-            $"/api/song/lyric?os=pc&id={songId}&lv=-1&kv=-1&tv=-1");
+            $"/api/song/lyric/v1?cp=false&id={songId}&lv=0&tv=0&rv=0&kv=0&yv=0&ytv=0&yrv=0");
         using var response = await httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
@@ -158,6 +158,7 @@ public sealed class NeteaseHttpLyricsProvider(HttpClient httpClient, SongMatchSc
 
         return (
             GetNestedString(document.RootElement, "lrc", "lyric"),
+            GetNestedString(document.RootElement, "ytlrc", "lyric") ??
             GetNestedString(document.RootElement, "tlyric", "lyric"));
     }
 

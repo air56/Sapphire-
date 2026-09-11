@@ -2,6 +2,7 @@ import { loadSettings, saveSettings } from './settings.js';
 import { selectDisplayLines } from './lyric-view-model.js';
 import { createVisualPreviewSnapshot, getVisualPreviewMode } from './preview-mode.js';
 import { selectResponsiveLayout } from './responsive-layout.js';
+import { startSapphireSmtc } from './sapphire-smtc.js';
 
 const BRIDGE_ORIGIN = 'http://127.0.0.1:18763';
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
@@ -200,6 +201,23 @@ function bindRuntimeContext() {
   observer.observe(els['widget-root']);
   updateResponsiveLayout();
 }
+async function forwardSapphireUpdate(update) {
+  try {
+    const response = await fetch(`${BRIDGE_ORIGIN}/v1/smtc`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(update)
+    });
+    if (!response.ok) console.debug('Sapphire SMTC update rejected', response.status);
+  } catch (error) {
+    console.debug('Sapphire SMTC bridge fallback active', error);
+  }
+}
+
+function startSapphireMediaRecognition() {
+  startSapphireSmtc((update) => forwardSapphireUpdate(update));
+}
+
 function startPositionTicker() {
   const tick = () => {
     if (bridgeSnapshot?.lyrics?.status === 'ready') renderLyrics();
@@ -212,6 +230,7 @@ readRuntimeContext();
 applySettings();
 bindSettings();
 bindRuntimeContext();
+startSapphireMediaRecognition();
 setState('正在连接歌词服务');
 startPositionTicker();
 const visualPreviewSnapshot = createVisualPreviewSnapshot(visualPreviewMode);
