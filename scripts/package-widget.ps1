@@ -15,6 +15,7 @@ $requiredFiles = @(
     'settings.js',
     'lyric-view-model.js',
     'preview-mode.js',
+    'responsive-layout.js',
     'assets/icon.svg'
 )
 

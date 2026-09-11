@@ -11,9 +11,9 @@ test('visual preview provides wide, stacked, and compact responsive frames', asy
   assert.match(page, /class="preview-frame wide"/);
   assert.match(page, /class="preview-frame stacked"/);
   assert.match(page, /class="preview-frame compact"/);
-  assert.match(page, /src="\.\/index\.html\?preview=wide"/);
-  assert.match(page, /src="\.\/index\.html\?preview=stacked"/);
-  assert.match(page, /src="\.\/index\.html\?preview=compact"/);
+  assert.match(page, /src="\.\/index\.html\?__sapphireVisualPreview=wide"/);
+  assert.match(page, /src="\.\/index\.html\?__sapphireVisualPreview=stacked"/);
+  assert.match(page, /src="\.\/index\.html\?__sapphireVisualPreview=compact"/);
   assert.match(page, /@media \(max-width: 720px\) \{ body \{ padding: 8px; \}/);
 });
 

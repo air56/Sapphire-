@@ -1,6 +1,7 @@
 import { loadSettings, saveSettings } from './settings.js';
 import { selectDisplayLines } from './lyric-view-model.js';
-import { createVisualPreviewSnapshot } from './preview-mode.js';
+import { createVisualPreviewSnapshot, getVisualPreviewMode } from './preview-mode.js';
+import { selectResponsiveLayout } from './responsive-layout.js';
 
 const BRIDGE_ORIGIN = 'http://127.0.0.1:18763';
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
@@ -168,7 +169,7 @@ function bindSettings() {
 function readRuntimeContext() {
   const params = new URLSearchParams(location.search);
   editMode = params.get('edit') === 'true' || params.get('editing') === 'true';
-  visualPreviewMode = params.get('preview');
+  visualPreviewMode = getVisualPreviewMode(location.search, document.referrer, window.top !== window.self);
   if (editMode) {
     els['settings-panel'].hidden = true;
     els['settings-toggle'].setAttribute('aria-expanded', 'false');
@@ -176,9 +177,9 @@ function readRuntimeContext() {
   }
 }
 
-function updateResponsiveLayout(width = els['widget-root'].clientWidth, height = els['widget-root'].clientHeight) {
-  const layout = height < 105 ? 'compact' : (width >= 560 ? 'wide' : 'stacked');
-  els['widget-root'].dataset.layout = layout;
+function updateResponsiveLayout(width, height) {
+  const rect = els['widget-root'].getBoundingClientRect();
+  els['widget-root'].dataset.layout = selectResponsiveLayout(width ?? rect.width, height ?? rect.height);
 }
 
 function bindRuntimeContext() {
@@ -193,7 +194,7 @@ function bindRuntimeContext() {
     }
   });
   const observer = new ResizeObserver((entries) => {
-    const rect = entries[0]?.contentRect;
+    const rect = entries[0]?.target?.getBoundingClientRect();
     updateResponsiveLayout(rect?.width, rect?.height);
   });
   observer.observe(els['widget-root']);

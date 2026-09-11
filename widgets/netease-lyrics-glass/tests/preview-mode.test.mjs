@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createVisualPreviewSnapshot } from '../preview-mode.js';
+import { createVisualPreviewSnapshot, getVisualPreviewMode } from '../preview-mode.js';
 import { selectDisplayLines } from '../lyric-view-model.js';
 
 test('visual preview exposes a paused bilingual lyric snapshot for all supported frames', () => {
@@ -10,12 +10,22 @@ test('visual preview exposes a paused bilingual lyric snapshot for all supported
 
     assert.equal(snapshot.bridge.status, 'ready');
     assert.equal(snapshot.playback.state, 'paused');
-    assert.equal(selected.currentOriginal, '我听见风穿过城市');
-    assert.equal(selected.currentTranslation, 'I hear the wind passing through the city');
-    assert.equal(selected.nextOriginal, '把漫长的夜点亮');
+    assert.equal(selected.currentOriginal, 'Moonlight on the sea');
+    assert.equal(selected.currentTranslation, '月光洒落海面');
+    assert.equal(selected.nextOriginal, 'The night grows bright');
   }
 });
 
 test('visual preview ignores unknown frame modes', () => {
   assert.equal(createVisualPreviewSnapshot('full-screen'), null);
+});
+
+test('visual demo mode only activates from the dedicated visual-preview parent', () => {
+  const parent = 'http://127.0.0.1:61329/visual-style.html';
+
+  assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=wide', parent, true), 'wide');
+  assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=wide', parent, false), null);
+  assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=wide', ''), null);
+  assert.equal(getVisualPreviewMode('?preview=wide', parent), null);
+  assert.equal(getVisualPreviewMode('?__sapphireVisualPreview=full-screen', parent), null);
 });

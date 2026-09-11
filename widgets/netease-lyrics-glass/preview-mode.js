@@ -1,5 +1,17 @@
 const SUPPORTED_PREVIEW_MODES = new Set(['wide', 'stacked', 'compact']);
+const VISUAL_PREVIEW_PARENT = '/visual-style.html';
 
+export function getVisualPreviewMode(search, referrer, isEmbedded) {
+  if (!isEmbedded) return null;
+  const mode = new URLSearchParams(search).get('__sapphireVisualPreview');
+  if (!SUPPORTED_PREVIEW_MODES.has(mode)) return null;
+
+  try {
+    return new URL(referrer).pathname.endsWith(VISUAL_PREVIEW_PARENT) ? mode : null;
+  } catch {
+    return null;
+  }
+}
 export function createVisualPreviewSnapshot(mode) {
   if (!SUPPORTED_PREVIEW_MODES.has(mode)) return null;
 
@@ -11,9 +23,9 @@ export function createVisualPreviewSnapshot(mode) {
     lyrics: {
       status: 'ready',
       lines: [
-        { startMs: 0, original: '所有故事都有回声', translation: 'Every story has an echo' },
-        { startMs: 12000, original: '我听见风穿过城市', translation: 'I hear the wind passing through the city' },
-        { startMs: 18000, original: '把漫长的夜点亮', translation: 'And light up the long night' }
+        { startMs: 0, original: 'Every story has an echo', translation: '每个故事都有回响' },
+        { startMs: 12000, original: 'Moonlight on the sea', translation: '月光洒落海面' },
+        { startMs: 18000, original: 'The night grows bright', translation: '长夜渐亮' }
       ]
     }
   };

@@ -44,8 +44,9 @@ button { color: inherit; }
 #next-original { color: var(--faint-color); font-size: var(--preview-size); line-height: 1.16; margin-top: 1px; }
 [data-layout='wide'] .lyrics { display: flex; align-items: baseline; gap: 14px; white-space: nowrap; }
 [data-layout='wide'] .lyric-text { overflow: hidden; text-overflow: ellipsis; }
-[data-layout='wide'] #current-original { flex: 1 1 auto; }
-[data-layout='wide'] #current-translation, [data-layout='wide'] #next-original { flex: 0 1 auto; }
+[data-layout='wide'] #current-original { flex: 1 1 48%; }
+[data-layout='wide'] #current-translation { flex: 0 1 30%; max-width: 30%; }
+[data-layout='wide'] #next-original { flex: 0 1 22%; max-width: 22%; }
 [data-layout='stacked'] .lyrics { display: grid; gap: 6px; white-space: normal; }
 [data-layout='compact'] { padding: 8px 12px; border-radius: 15px; }
 [data-layout='compact']::before { border-radius: 14px; }
