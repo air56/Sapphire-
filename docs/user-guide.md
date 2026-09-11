@@ -35,6 +35,8 @@ dotnet run --project .\src\NeteaseLyricsBridge\NeteaseLyricsBridge.csproj
 .\scripts\run-bridge.ps1
 ```
 
+`run-bridge.ps1` 已使用 Windows PowerShell 5.1 兼容的 UTF-8 BOM 编码。如果脚本提示“字符串缺少终止符”，请确认运行的是当前工作树中的脚本，不要从聊天窗口复制脚本内容覆盖它。
+
 Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动后可用浏览器访问本机根路径确认服务已启动。
 
 ### 3. 打包并导入 Sapphire

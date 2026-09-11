@@ -4,6 +4,7 @@ import { access, readFile } from 'node:fs/promises';
 
 const metadataUrl = new URL('../metadata.json', import.meta.url);
 const packageScriptUrl = new URL('../../../scripts/package-widget.ps1', import.meta.url);
+const bridgeScriptUrl = new URL('../../../scripts/run-bridge.ps1', import.meta.url);
 
 test('Sapphire HTML widget points directly to its HTML entry and declares SMTC support', async () => {
   const metadata = JSON.parse(await readFile(metadataUrl, 'utf8'));
@@ -22,4 +23,11 @@ test('package requires and ships the configured preview image instead of a QML e
   await access(previewUrl);
   assert.match(packageScript, /'preview\.png'/);
   assert.doesNotMatch(packageScript, /'SWebWidget\.qml'/);
+});
+
+test('run-bridge.ps1 is UTF-8 BOM encoded for Windows PowerShell 5.1', async () => {
+  const bytes = await readFile(bridgeScriptUrl);
+
+  assert.deepEqual([...bytes.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
+  assert.doesNotMatch(bytes.toString('utf8'), /```/u);
 });
