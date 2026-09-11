@@ -24,8 +24,14 @@ function applySettings() {
   const root = els['widget-root'];
   root.style.setProperty('--lyric-size', `${settings.fontSize}px`);
   root.style.setProperty('--lyric-color', settings.color);
-  root.style.setProperty('--translation-size', `${Math.round(settings.fontSize * 0.62)}px`);
+  root.style.setProperty('--translation-size', `${settings.translationSize}px`);
+  root.style.setProperty('--translation-gap', `${settings.translationGap}px`);
   root.style.setProperty('--preview-size', `${Math.round(settings.fontSize * 0.56)}px`);
+  root.style.setProperty('--font-zh', settings.zhFont);
+  root.style.setProperty('--font-ja', settings.jaFont);
+  root.style.setProperty('--font-latin', settings.latinFont);
+  root.style.setProperty('--text-shadow-strength', String(settings.textShadowStrength));
+  root.style.setProperty('--text-glow-strength', String(settings.textGlowStrength));
   els['font-size-input'].value = settings.fontSize;
   els['max-chars-input'].value = settings.maxChars;
   els['color-input'].value = settings.color;
@@ -84,7 +90,7 @@ function renderScriptText(container, value) {
 function renderSlot(slot, originalElement, translationElement, original, translation) {
   const hasOriginal = Boolean(String(original ?? '').trim());
   const hasTranslation = Boolean(String(translation ?? '').trim());
-  if (originalElement?.id === 'current-original') renderScriptText(originalElement, original);
+  if (originalElement) renderScriptText(originalElement, original);
   else setText(originalElement, original, !hasOriginal);
   const translationText = translationElement?.querySelector('span') ?? translationElement;
   setText(translationText, translation, false);

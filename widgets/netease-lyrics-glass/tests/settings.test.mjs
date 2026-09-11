@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadSettings, normalizeSettings, saveSettings, SETTINGS_KEY } from '../settings.js';
+import { DEFAULT_SETTINGS, loadSettings, normalizeSettings, saveSettings, SETTINGS_KEY } from '../settings.js';
 
 test('normalizeSettings clamps and preserves supported user preferences', () => {
   assert.deepEqual(normalizeSettings({ fontSize: 99, maxChars: 9, color: '#123456' }), {
+    ...DEFAULT_SETTINGS,
     fontSize: 48,
     maxChars: 20,
     color: '#123456'
@@ -19,7 +20,7 @@ test('saveSettings persists normalized values and rejects named colors', () => {
 
   const saved = saveSettings({ fontSize: 99, maxChars: 9, color: 'red' }, storage);
 
-  assert.deepEqual(saved, { fontSize: 48, maxChars: 20, color: '#F7FBFF' });
+  assert.deepEqual(saved, { ...DEFAULT_SETTINGS, fontSize: 48, maxChars: 20, color: '#F7FBFF' });
   assert.deepEqual(JSON.parse(values.get(SETTINGS_KEY)), saved);
 });
 
@@ -32,11 +33,7 @@ test('loadSettings falls back when WebEngine storage is unavailable', () => {
   });
 
   try {
-    assert.deepEqual(loadSettings(), {
-      fontSize: 26,
-      maxChars: 56,
-      color: '#F7FBFF'
-    });
+    assert.deepEqual(loadSettings(), DEFAULT_SETTINGS);
   } finally {
     if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor);
     else delete globalThis.localStorage;

@@ -1,18 +1,18 @@
 :root {
   color-scheme: light dark;
-  --lyric-size: 26px;
+  --lyric-size: 37px;
   --lyric-color: #f7fbff;
   --translation-size: 16px;
   --preview-size: 15px;
   --lyric-slot-height: 82px;
-  --translation-gap: 5px;
-  --font-zh: system-ui, "Microsoft YaHei", sans-serif;
-  --font-ja: system-ui, "Yu Gothic UI", sans-serif;
-  --font-latin: system-ui, "Aptos", sans-serif;
-  --muted-color: rgb(247 251 255 / .72);
-  --faint-color: rgb(247 251 255 / .42);
-  --text-shadow-strength: .45;
-  --text-glow-strength: .14;
+  --translation-gap: 9px;
+  --font-zh: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-ja: "Yu Gothic UI", "Noto Sans JP", sans-serif;
+  --font-latin: "Atkinson Hyperlegible", "Aptos", sans-serif;
+  --muted-color: rgb(247 251 255 / .64);
+  --faint-color: rgb(247 251 255 / .32);
+  --text-shadow-strength: .2;
+  --text-glow-strength: .08;
   font-family: var(--font-zh);
 }
 * { box-sizing: border-box; }
@@ -48,7 +48,7 @@ button { color: inherit; }
 .lyric-slot[data-empty='true'] { opacity: 0; pointer-events: none; }
 .lyric-text { min-width: 0; height: 100%; margin: 0; overflow: hidden; overflow-wrap: anywhere; text-overflow: ellipsis; }
 .current-original, .next-original { display: block; font-family: var(--font-zh); }
-#current-original { color: var(--lyric-color); font-size: var(--lyric-size); line-height: 1.12; font-weight: 700; letter-spacing: -.02em; text-shadow: 0 2px 8px rgb(0 0 0 / var(--text-shadow-strength)), 0 0 2px rgb(255 255 255 / var(--text-glow-strength)); }
+#current-original { color: var(--lyric-color); font-size: var(--lyric-size); line-height: 1.12; font-weight: 600; letter-spacing: -.02em; text-shadow: 0 2px 8px rgb(0 0 0 / var(--text-shadow-strength)), 0 0 2px rgb(255 255 255 / var(--text-glow-strength)); }
 #current-translation, #next-translation { color: var(--muted-color); font-family: var(--font-zh); font-size: var(--translation-size); line-height: 1.2; text-shadow: 0 2px 6px rgb(0 0 0 / calc(var(--text-shadow-strength) * .8)); }
 #next-original { color: var(--faint-color); font-size: var(--preview-size); line-height: 1.16; text-shadow: 0 2px 6px rgb(0 0 0 / calc(var(--text-shadow-strength) * .8)); }
 #current-translation[data-empty='true'], #next-translation[data-empty='true'] { visibility: hidden; }
