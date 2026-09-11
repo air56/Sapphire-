@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>网易云双语歌词</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="widget-root" class="widget-shell" aria-live="polite">
+      <div class="ambient-glow ambient-glow-a" aria-hidden="true"></div>
+      <div class="ambient-glow ambient-glow-b" aria-hidden="true"></div>
+      <section class="lyrics-card">
+        <div class="card-topline">
+          <div class="eyebrow"><span class="status-dot" aria-hidden="true"></span><span id="state-label">等待歌词桥接服务</span></div>
+          <button id="settings-toggle" class="icon-button" type="button" aria-label="打开歌词设置" aria-expanded="false" title="歌词设置">⚙</button>
+        </div>
+        <div class="lyrics" role="status">
+          <p id="current-original" class="lyric-text current-original">等待歌词桥接服务</p>
+          <p id="current-translation" class="lyric-text current-translation" hidden></p>
+          <p id="next-original" class="lyric-text next-original" hidden></p>
+        </div>
+        <aside id="settings-panel" class="settings-panel" hidden aria-label="歌词设置">
+          <div class="settings-heading"><strong>歌词外观</strong><span>自动保存</span></div>
+          <label class="setting-row" for="font-size-input"><span>字号</span><input id="font-size-input" type="range" min="16" max="48" step="1" /><output id="font-size-output" for="font-size-input">26px</output></label>
+          <label class="setting-row" for="max-chars-input"><span>长度</span><input id="max-chars-input" type="range" min="20" max="180" step="1" /><output id="max-chars-output" for="max-chars-input">56</output></label>
+          <label class="setting-row" for="color-input"><span>文字颜色</span><input id="color-input" type="color" /></label>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

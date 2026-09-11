@@ -1,0 +1,26 @@
+{
+  "name": "netease-lyrics-glass",
+  "displayName": "网易云双语歌词玻璃条",
+  "description": "从本机歌词桥接服务读取网易云当前播放歌曲，显示原文、中文翻译和下一句。",
+  "version": "0.1.0",
+  "author": "Codex",
+  "tags": ["网易云", "歌词", "Liquid Glass", "音乐"],
+  "widgetType": "Html",
+  "widgetFileName": "SWebWidget.qml",
+  "mouseEventMode": 2,
+  "mouseEventModeLabel": "OnlyNonEdit",
+  "functions": [],
+  "defaultGridSize": { "rows": 1, "cols": 5 },
+  "defaultWidth": 640,
+  "defaultHeight": 128,
+  "width": 640,
+  "height": 128,
+  "defaultShowBackground": false,
+  "network": true,
+  "permissions": ["network"],
+  "minimumAppVersion": "1.6.0.0",
+  "customFields": {
+    "bridgeEndpoint": "http://127.0.0.1:18763",
+    "layout": "responsive-liquid-glass"
+  }
+}
