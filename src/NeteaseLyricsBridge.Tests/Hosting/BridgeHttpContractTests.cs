@@ -12,6 +12,17 @@ namespace NeteaseLyricsBridge.Tests.Hosting;
 public sealed class BridgeHttpContractTests
 {
     [Fact]
+    public async Task ProductionServiceGraph_ResolvesTheHttpLyricsProvider()
+    {
+        await using var factory = new ProductionBridgeWebApplicationFactory();
+        using var scope = factory.Services.CreateScope();
+
+        var provider = scope.ServiceProvider.GetRequiredService<ILyricsProvider>();
+
+        Assert.IsType<NeteaseHttpLyricsProvider>(provider);
+    }
+
+    [Fact]
     public async Task SnapshotEndpoint_ReturnsTheCurrentBridgeSnapshot()
     {
         await using var factory = new BridgeWebApplicationFactory();
@@ -85,5 +96,21 @@ public sealed class BridgeWebApplicationFactory : WebApplicationFactory<Program>
     {
         public Task<LyricsLookupResult> GetLyricsAsync(TrackIdentity identity, CancellationToken cancellationToken) =>
             Task.FromResult(new LyricsLookupResult("unavailable", [], null));
+    }
+}
+
+public sealed class ProductionBridgeWebApplicationFactory : WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+        builder.ConfigureServices(services =>
+            services.AddSingleton<ISmtcSessionFeed, NoopSmtcSessionFeed>());
+    }
+
+    private sealed class NoopSmtcSessionFeed : ISmtcSessionFeed
+    {
+        public Task StartAsync(Func<MediaUpdate, Task> onUpdate, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

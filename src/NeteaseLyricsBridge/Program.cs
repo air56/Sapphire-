@@ -13,6 +13,7 @@ builder.Services.AddCors(options => options.AddPolicy("LocalWidget", policy =>
     // Bridge 只绑定回环地址；允许本地 WebEngine 的 file/qrc/null 来源读取只读快照和 SSE。
     policy.AllowAnyOrigin().AllowAnyHeader();
 }));
+builder.Services.AddSingleton<SongMatchScorer>();
 builder.Services.AddHttpClient<ILyricsProvider, NeteaseHttpLyricsProvider>(client =>
 {
     client.BaseAddress = new Uri("https://music.163.com/");
