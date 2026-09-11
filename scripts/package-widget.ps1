@@ -3,8 +3,12 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $widgetRoot = Join-Path $repoRoot 'widgets/netease-lyrics-glass'
 $distRoot = Join-Path $repoRoot 'dist'
-$outputPath = Join-Path $distRoot 'netease-lyrics-glass.sawidget'
-$tempPath = Join-Path $distRoot 'netease-lyrics-glass.tmp.zip'
+$metadataPath = Join-Path $widgetRoot 'metadata.json'
+$metadata = Get-Content -LiteralPath $metadataPath -Raw | ConvertFrom-Json
+$version = ([string]$metadata.version).Trim()
+if ([string]::IsNullOrWhiteSpace($version)) { throw 'metadata.json 缺少组件版本。' }
+$outputPath = Join-Path $distRoot ('netease-lyrics-glass-v{0}.sawidget' -f $version)
+$tempPath = Join-Path $distRoot ('netease-lyrics-glass-v{0}.tmp.zip' -f $version)
 
 $requiredFiles = @(
     'metadata.json',

@@ -32,6 +32,13 @@ test('HTML assets include the widget version to bust Sapphire WebEngine cache af
   assert.ok(index.includes(`./styles.css?v=${metadata.version}`));
   assert.ok(index.includes(`./app.js?v=${metadata.version}`));
 });
+test('package output embeds the metadata version to force Sapphire package refresh', async () => {
+  const packageScript = await readFile(packageScriptUrl, 'utf8');
+
+  assert.match(packageScript, /ConvertFrom-Json/);
+  assert.ok(packageScript.includes("('netease-lyrics-glass-v{0}.sawidget' -f $version)"));
+});
+
 test('run-bridge.ps1 is UTF-8 BOM encoded for Windows PowerShell 5.1', async () => {
   const bytes = await readFile(bridgeScriptUrl);
 
