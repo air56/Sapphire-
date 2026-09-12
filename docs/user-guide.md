@@ -40,8 +40,28 @@ dotnet run --project .\src\NeteaseLyricsBridge\NeteaseLyricsBridge.csproj
 `run-bridge.ps1` 已使用 Windows PowerShell 5.1 兼容的 UTF-8 BOM 编码。如果脚本提示“字符串缺少终止符”，请确认运行的是当前工作树中的脚本，不要从聊天窗口复制脚本内容覆盖它。
 
 Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动后可用浏览器访问本机根路径确认服务已启动。
+### 3. 设置 Bridge 登录自启（推荐）
 
-### 3. 打包并导入 Sapphire
+在仓库根目录用**当前 Windows 用户**运行一次：
+
+```powershell
+.\scripts\install-bridge-autostart.ps1
+```
+
+脚本会创建一个名为 `NeteaseLyricsBridge` 的用户级任务：每次登录 Windows 后，在后台隐藏启动 Bridge，并把启动日志写入：
+
+- `%LocalAppData%\NeteaseLyricsBridge\bridge.stdout.log`
+- `%LocalAppData%\NeteaseLyricsBridge\bridge.stderr.log`
+
+任务不会申请管理员权限，也不会把 Bridge 暴露到局域网。设置完成后可以立即注销并重新登录验证；也可以在“任务计划程序”中运行该任务。若日后仓库目录移动，请在新目录重新运行安装脚本以更新任务路径。
+
+如需取消开机自启：
+
+```powershell
+.\scripts\uninstall-bridge-autostart.ps1
+```
+
+### 4. 打包并导入 Sapphire
 
 ```powershell
 .\scripts\package-widget.ps1
@@ -49,7 +69,7 @@ Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动�
 
 生成的文件为 `dist/netease-lyrics-glass-v0.1.14.sawidget`。本次修复后的组件版本为 `0.1.14`。在 Sapphire 的小组件导入界面选择这个文件，然后将组件添加到桌面。为避免 Sapphire 复用旧实例的显示设置，请先删除桌面上的旧实例，再重新导入并添加新包；如果宿主仍显示背景，请在该实例的编辑设置中关闭“显示背景 / Show Background”和“显示侧栏 / Show Side”。
 
-### 4. 播放歌曲
+### 5. 播放歌曲
 
 如果组件显示“打开网易云并播放歌曲”，按下面顺序检查：
 
