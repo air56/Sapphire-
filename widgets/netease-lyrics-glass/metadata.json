@@ -2,7 +2,7 @@
   "name": "netease-lyrics-glass",
   "displayName": "网易云双语歌词玻璃条",
   "description": "自动识别网易云当前播放歌曲，显示原文、中文翻译和下一句。",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "author": "Codex",
   "tags": ["网易云", "歌词", "Liquid Glass", "音乐"],
   "widgetType": "Html",
@@ -18,6 +18,7 @@
   "width": 960,
   "height": 216,
   "defaultShowBackground": false,
+  "defaultShowSide": false,
   "network": true,
   "permissions": ["network"],
   "minimumAppVersion": "1.6.0.0",
@@ -26,4 +27,3 @@
     "layout": "responsive-liquid-glass"
   }
 }
-

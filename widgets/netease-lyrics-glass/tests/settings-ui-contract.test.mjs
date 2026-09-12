@@ -12,14 +12,15 @@ async function readUiFiles() {
   };
 }
 
-test('settings toggle has a prominent, accessible hit area', async () => {
+test('settings toggle keeps a prominent, accessible transparent hit area', async () => {
   const { index, styles } = await readUiFiles();
 
   assert.match(index, /<button id="settings-toggle"[^>]*class="[^"]*icon-button[^"]*"/);
   assert.match(index, /id="settings-toggle"[^>]*aria-controls="settings-panel"/);
   assert.match(styles, /\.icon-button\s*\{[^}]*width:\s*40px;[^}]*height:\s*40px;/s);
   assert.match(styles, /\.icon-button\s*\{[^}]*font-size:\s*18px;/s);
-  assert.match(styles, /\.icon-button\s*\{[^}]*border:\s*1px solid/s);
+  assert.match(styles, /\.icon-button\s*\{[^}]*border:\s*0/s);
+  assert.match(styles, /\.icon-button\s*\{[^}]*background:\s*transparent/s);
 });
 
 test('settings panel exposes an explicit close button', async () => {
