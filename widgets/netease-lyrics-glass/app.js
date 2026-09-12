@@ -62,32 +62,47 @@ function setSlotEmpty(slot, empty) {
 
 function renderScriptText(container, value) {
   if (!container) return;
-  container.replaceChildren();
   const text = String(value ?? '');
-  const fragment = document.createDocumentFragment();
-  let buffer = '';
-  let currentScript = null;
-  const flush = () => {
-    if (!buffer) return;
-    const span = document.createElement('span');
-    span.className = `script-${currentScript ?? 'zh'}`;
-    span.textContent = buffer;
-    fragment.appendChild(span);
-    buffer = '';
-  };
-  for (const character of text) {
-    const code = character.codePointAt(0);
-    const script = /[A-Za-z0-9]/.test(character)
-      ? 'latin'
-      : ((code >= 0x3040 && code <= 0x30ff) ? 'ja' : 'zh');
-    if (script !== currentScript) {
-      flush();
-      currentScript = script;
+
+  // Do not use Element.replaceChildren here. Sapphire 5 can run an older
+  // Qt WebEngine where that newer DOM API is missing; a thrown TypeError in
+  // this function prevents the ready snapshot from ever reaching the screen.
+  // textContent is the compatibility baseline and also gives us a safe
+  // fallback if span creation is unavailable for any reason.
+  container.textContent = text;
+  if (!text || typeof document.createDocumentFragment !== 'function' || typeof document.createElement !== 'function') return;
+
+  try {
+    const fragment = document.createDocumentFragment();
+    let buffer = '';
+    let currentScript = null;
+    const flush = () => {
+      if (!buffer) return;
+      const span = document.createElement('span');
+      span.className = `script-${currentScript ?? 'zh'}`;
+      span.textContent = buffer;
+      fragment.appendChild(span);
+      buffer = '';
+    };
+    for (const character of text) {
+      const code = character.codePointAt(0);
+      const script = /[A-Za-z0-9]/.test(character)
+        ? 'latin'
+        : ((code >= 0x3040 && code <= 0x30ff) ? 'ja' : 'zh');
+      if (script !== currentScript) {
+        flush();
+        currentScript = script;
+      }
+      buffer += character;
     }
-    buffer += character;
+    flush();
+    container.textContent = '';
+    container.appendChild(fragment);
+  } catch {
+    // Keep the plain text already assigned above. Displaying the lyric is
+    // more important than language-specific font spans on legacy engines.
+    container.textContent = text;
   }
-  flush();
-  container.appendChild(fragment);
 }
 
 function renderSlot(slot, originalElement, translationElement, original, translation) {

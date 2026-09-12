@@ -21,3 +21,10 @@ test('classic runtime marks execution before connecting to the bridge', async ()
   assert.match(runtime, /playback-state\.js/);
 });
 
+
+ test('widget lyric rendering avoids replaceChildren for older Sapphire WebEngine builds', async () => {
+  const app = await readFile(new URL('app.js', widgetRoot), 'utf8');
+
+  assert.doesNotMatch(app, /\.replaceChildren\s*\(/);
+  assert.match(app, /container\.textContent\s*=\s*''/);
+});
