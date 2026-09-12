@@ -44,3 +44,10 @@ test('runtime applies the selected language font stacks and low-interference eff
   assert.match(styles, /--text-shadow-strength:\s*\.2/);
   assert.match(styles, /--text-glow-strength:\s*\.08/);
 });
+
+test('bridge runtime keeps polling snapshots when SSE updates are unavailable', async () => {
+  const app = await readFile(new URL('../app.js', import.meta.url), 'utf8');
+  assert.match(app, /SNAPSHOT_POLL_INTERVAL_MS/);
+  assert.match(app, /startSnapshotPolling\(\)/);
+  assert.match(app, /fetchSnapshot\(\)/);
+});

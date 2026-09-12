@@ -7,6 +7,7 @@ import { createPlaybackClock } from './playback-state.js';
 
 const BRIDGE_ORIGIN = 'http://127.0.0.1:18763';
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
+const SNAPSHOT_POLL_INTERVAL_MS = 2000;
 const ids = ['widget-root', 'state-label', 'current-slot', 'current-original', 'current-translation', 'current-translation-text', 'next-slot', 'next-original', 'next-translation', 'next-translation-text', 'settings-toggle', 'settings-panel', 'settings-close', 'font-size-input', 'max-chars-input', 'color-input', 'font-size-output', 'max-chars-output'];
 const els = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
 
@@ -18,6 +19,8 @@ let reconnectAttempt = 0;
 let reconnectTimer = null;
 let eventSource = null;
 let connectionGeneration = 0;
+let snapshotPollTimer = null;
+let snapshotPollInFlight = false;
 let visualPreviewMode = null;
 
 function applySettings() {
@@ -221,6 +224,29 @@ async function connectBridge(generation = connectionGeneration) {
   }
 }
 
+function startSnapshotPolling() {
+  if (snapshotPollTimer) return;
+  const generation = connectionGeneration;
+  const poll = async () => {
+    snapshotPollTimer = null;
+    if (generation !== connectionGeneration || snapshotPollInFlight) return;
+    snapshotPollInFlight = true;
+    try {
+      const snapshot = await fetchSnapshot();
+      if (generation === connectionGeneration) renderSnapshot(snapshot);
+    } catch {
+      // EventSource and the reconnect loop still provide the primary live path.
+      // Polling is intentionally quiet so a temporarily stopped Bridge does not
+      // overwrite the more useful offline status.
+    } finally {
+      snapshotPollInFlight = false;
+      if (generation === connectionGeneration) {
+        snapshotPollTimer = setTimeout(poll, SNAPSHOT_POLL_INTERVAL_MS);
+      }
+    }
+  };
+  snapshotPollTimer = setTimeout(poll, SNAPSHOT_POLL_INTERVAL_MS);
+}
 function bindSettings() {
   const update = (patch) => { settings = saveSettings({ ...settings, ...patch }); applySettings(); renderLyrics(); };
   els['font-size-input'].addEventListener('input', (event) => update({ fontSize: event.target.value }));
@@ -314,5 +340,6 @@ if (visualPreviewSnapshot) {
 } else {
   connectionGeneration += 1;
   connectBridge(connectionGeneration);
+  startSnapshotPolling();
 }
 

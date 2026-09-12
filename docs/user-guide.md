@@ -4,9 +4,9 @@
 
 本项目已完成小组件外壳、Liquid Glass 响应式界面、设置持久化、歌词视图模型、SSE 重连逻辑，以及 .NET 8 本机 Bridge 的实现。当前版本新增 Sapphire WebChannel SMTC 主路径：组件会优先读取 Sapphire 提供的当前媒体信息，并在本机 Bridge 中完成网易云歌词匹配；Windows SMTC 仍作为兜底路径。实机播放验证需要在 Windows 10/11 上安装网易云音乐桌面客户端后进行。
 
-## 更新旧版本（0.1.11）
+## 更新旧版本（0.1.12）
 
-本次 `0.1.11` 在 `0.1.9` 的歌词滚动修复基础上，加入了透明文字层视觉预览：可独立调整宽度、高度、主歌词字号、翻译字号、间距、翻译开关，以及中文、日文/假名、英文/拉丁三组字体；同时修复了预览 iframe 缓存和 Referrer 缺失时误连真实 Bridge 的问题。请删除旧组件后重新导入带版本号的新包。
+本次 `0.1.12` 在 `0.1.9` 的歌词滚动修复基础上，加入了透明文字层视觉预览：可独立调整宽度、高度、主歌词字号、翻译字号、间距、翻译开关，以及中文、日文/假名、英文/拉丁三组字体；同时修复了预览 iframe 缓存和 Referrer 缺失时误连真实 Bridge 的问题。请删除旧组件后重新导入带版本号的新包。
 
 如果你已经导入过早期的 `0.1.0` 安装包，请先在 Sapphire 的小组件管理器中删除旧的“网易云双语歌词玻璃条”，再导入本版本生成的安装包。早期版本把 QML 容器错误地作为 HTML 主文件，可能导致歌词区显示源代码、样式异常或组件无法运行。
 
@@ -45,7 +45,7 @@ Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动�
 .\scripts\package-widget.ps1
 ```
 
-生成的文件为 `dist/netease-lyrics-glass-v0.1.11.sawidget`。本次修复后的组件版本为 `0.1.11`。在 Sapphire 的小组件导入界面选择这个文件，然后将组件添加到桌面。
+生成的文件为 `dist/netease-lyrics-glass-v0.1.12.sawidget`。本次修复后的组件版本为 `0.1.12`。在 Sapphire 的小组件导入界面选择这个文件，然后将组件添加到桌面。
 
 ### 4. 播放歌曲
 
@@ -57,7 +57,7 @@ Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动�
 4. 在浏览器或 Sapphire 内打开 `http://127.0.0.1:18763/`，看到 `Netease Lyrics Bridge is running.` 才表示 Bridge 正在监听。
 5. 如果之前导入过旧包，请先删除旧的“网易云双语歌词玻璃条”，再导入新生成的 `.sawidget`；旧包可能把 `SWebWidget.qml` 当成 HTML 入口，从而在歌词栏显示源代码。
 
-组件不需要额外手动配置 WebChannel。新包的 `index.html` 会加载 Sapphire 提供的 `qrc:///qtwebchannel/qwebchannel.js`，然后订阅 `bridge.smtcMediaInfo`、`bridge.smtcPlaybackStatus` 以及媒体标题、艺术家、专辑、应用名、播放位置和时长等独立属性及其变化信号。WebChannel 不可用时，组件仍会连接 `127.0.0.1:18763` 的 SSE 兜底链路。
+组件不需要额外手动配置 WebChannel。新包的 `index.html` 会加载 Sapphire 提供的 `qrc:///qtwebchannel/qwebchannel.js`，然后订阅 `bridge.smtcMediaInfo`、`bridge.smtcPlaybackStatus` 以及媒体标题、艺术家、专辑、应用名、播放位置和时长等独立属性及其变化信号。WebChannel 不可用时，组件仍会连接 `127.0.0.1:18763` 的 SSE 兜底链路。 如果 Qt WebEngine 没有及时派发 SSE 更新，组件还会每 2 秒轮询 `/v1/snapshot`，因此歌词查询完成后无需再次重启 Sapphire。
 
 打开网易云音乐 Windows 桌面客户端并播放歌曲。组件会自动通过 Sapphire WebChannel 读取当前 SMTC 媒体信息；识别失败时会自动回退到本机 Windows SMTC Bridge。匹配歌曲后显示原文歌词；网易云提供翻译时，会在原文下显示中文翻译，并显示下一句预告。无需在网易云内开启额外开发者选项，也无需填写歌曲 ID。
 
@@ -98,7 +98,5 @@ Bridge 只监听本机 `127.0.0.1:18763`，不会监听局域网地址。启动�
 
 | 日期 | Windows 版本 | 网易云客户端版本 | Bridge 版本 | 结果 |
 | --- | --- | --- | --- | --- |
-| 待补充 | Windows 10 | 待补充 | 0.1.11 | 待验证 |
-| 待补充 | Windows 11 | 待补充 | 0.1.11 | 待验证 |
-
-
+| 待补充 | Windows 10 | 待补充 | 0.1.12 | 待验证 |
+| 待补充 | Windows 11 | 待补充 | 0.1.12 | 待验证 |
